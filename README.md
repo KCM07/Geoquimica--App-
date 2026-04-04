@@ -36,8 +36,7 @@ Embajador CODEa UNI 2026
 ## 📊 Proyecto
 
 **Proyecto Final 2:** Procesamiento de datos con Pandas en minería  
-
-🎓 **Carrera:** Ingeniería Geológica  
+ **Especialidad:** Ingeniería Geológica  
 
 ---
 
