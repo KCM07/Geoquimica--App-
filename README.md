@@ -8,7 +8,7 @@ Este proyecto desarrolla un análisis geoquímico utilizando Python y Pandas par
 - Análisis estadístico
 - Matriz de correlación
 - Visualización de datos
-- Análisis geoespacial
+- Análisis geoespacialhttps://github.com/KCM07/Geoquimica--App-/blob/main/README.md
 - Aplicación web interactiva con Streamlit
 
 ## Tecnologías utilizadas
@@ -19,7 +19,7 @@ Este proyecto desarrolla un análisis geoquímico utilizando Python y Pandas par
 - Seaborn
 - Streamlit
 ## Autor 
-Kem Giusseppe Carbajal Moscoso 
+Kem Giusseppe Carbajal Moscoso /
 Embajador CODEa UNI 2026  / Proyecto final 2 
 Desarrollador en formación en soluciones digitales para la industria minera 
 ## Ejecución
