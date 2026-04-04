@@ -19,9 +19,10 @@ Este proyecto desarrolla un análisis geoquímico utilizando Python y Pandas par
 - Seaborn
 - Streamlit
 ## Autor 
-Kem Giusseppe Carbajal Moscoso /
-Embajador CODEa UNI 2026  / Proyecto final 2 
+Kem Giusseppe Carbajal Moscoso
 Desarrollador en formación en soluciones digitales para la industria minera 
+Embajador CODEa UNI 2026  / Proyecto final 2: PROCESAMIENTO DE DATOS CON PANDAS EN MINERÍA 
+Ingeniería Geológica
 ## Ejecución
 
 ```bash
