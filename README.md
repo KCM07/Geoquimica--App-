@@ -8,7 +8,7 @@ Este proyecto desarrolla un análisis geoquímico utilizando Python y Pandas par
 - Análisis estadístico
 - Matriz de correlación
 - Visualización de datos
-- Análisis geoespacialhttps://github.com/KCM07/Geoquimica--App-/blob/main/README.md
+- Análisis geoespacial
 - Aplicación web interactiva con Streamlit
 
 ## Tecnologías utilizadas
