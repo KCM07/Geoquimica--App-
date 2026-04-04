@@ -223,18 +223,25 @@ if uploaded_file:
         # =========================
         st.subheader("🪨 Reagrupación litológica")
 
-        st.dataframe(
-            df[[
-                "rock_name",
-                "rock_name_clean",
-                "rock_base",
-                "rock_context",
-                "rock_observation",
-                "rock_group"
-            ]],
-            use_container_width=True,
-            height=400
-        )
+        cols_litologia = [
+            "rock_name",
+            "rock_name_clean",
+            "rock_base",
+            "rock_context",
+            "rock_observation",
+            "rock_group"
+        ]
+
+        cols_existentes = [col for col in cols_litologia if col in df.columns]
+
+        if cols_existentes:
+            st.dataframe(
+                df[cols_existentes],
+                use_container_width=True,
+                height=400
+            )
+        else:
+            st.warning("No se encontraron columnas de reagrupación litológica.")
 
         col1, col2, col3 = st.columns(3)
 
@@ -246,21 +253,40 @@ if uploaded_file:
                 height=350
             )
 
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.write("**Roca base**")
+            if "rock_base" in df.columns:
+                st.dataframe(
+                    df["rock_base"].value_counts().reset_index(),
+                    use_container_width=True,
+                    height=350
+                )
+            else:
+                st.info("Columna rock_base no disponible")
+
         with col2:
             st.write("**Contexto litológico**")
-            st.dataframe(
-                df["rock_context"].value_counts().reset_index(),
-                use_container_width=True,
-                height=350
-            )
+            if "rock_context" in df.columns:
+                st.dataframe(
+                    df["rock_context"].value_counts().reset_index(),
+                    use_container_width=True,
+                    height=350
+                )
+            else:
+                st.info("Columna rock_context no disponible")
 
         with col3:
             st.write("**Grupo litológico**")
-            st.dataframe(
-                df["rock_group"].value_counts().reset_index(),
-                use_container_width=True,
-                height=350
-            )
+            if "rock_group" in df.columns:
+                st.dataframe(
+                    df["rock_group"].value_counts().reset_index(),
+                    use_container_width=True,
+                    height=350
+                )
+            else:
+                st.info("Columna rock_group no disponible")
 
         # =========================
         # 7. ESTADÍSTICAS
