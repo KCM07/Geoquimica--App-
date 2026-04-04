@@ -44,7 +44,21 @@ if uploaded_file:
     )
 
     if modo == "Vista previa (50 filas)":
-        st.dataframe(df.head(50))
+        modo = st.radio(
+            "Visualización",
+            ["50 filas", "Rango", "Todo"]
+        )
+
+        if modo == "50 filas":
+            st.dataframe(df.head(51))
+
+        elif modo == "Rango":
+            inicio = st.number_input("Inicio", 0, len(df) - 1, 0)
+            fin = st.number_input("Fin", 1, len(df), 51)
+            st.dataframe(df.iloc[inicio:fin])
+
+        else:
+            st.dataframe(df)
 
     elif modo == "Elegir rango":
         col1, col2 = st.columns(2)
@@ -62,7 +76,7 @@ if uploaded_file:
                 "Fila final",
                 min_value=1,
                 max_value=len(df),
-                value=min(50, len(df))
+                value=min(51, len(df))
             )
 
         if inicio < fin:
