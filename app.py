@@ -1,9 +1,21 @@
 import streamlit as st
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 from modules.loader import load_data
 from modules.cleaning import clean_data
+from modules.analysis import (
+    descriptive_stats,
+    correlation_analysis,
+    add_geochemical_variables
+)
+from modules.visualization import (
+    scatter_plot,
+    bar_plot,
+    box_plot,
+    correlation_heatmap,
+    bar_plot_rock_group
+)
+from modules.geospatial import plot_locations
+from modules.rock_name_processing import process_rock_names
 
 st.set_page_config(page_title="Análisis Geoquímico", layout="wide")
 
@@ -12,14 +24,16 @@ st.title("⛏️ Análisis Geoquímico de Rocas Ígneas")
 uploaded_file = st.file_uploader("Sube tu archivo CSV", type=["csv"])
 
 if uploaded_file:
+    # =========================
+    # 1. CARGA Y LIMPIEZA
+    # =========================
     df = load_data(uploaded_file)
     df = clean_data(df)
-
-    if "Na2On" in df.columns and "K2On" in df.columns:
-        df["alkalis"] = df["Na2On"] + df["K2On"]
+    df = add_geochemical_variables(df)
+    df = process_rock_names(df)
 
     # =========================
-    # VISTA INTERACTIVA
+    # 2. VISTA INTERACTIVA
     # =========================
     st.subheader("📋 Vista previa de los datos")
     st.write(f"Filas totales: {df.shape[0]} | Columnas: {df.shape[1]}")
@@ -60,56 +74,69 @@ if uploaded_file:
         st.dataframe(df)
 
     # =========================
-    # ESTADÍSTICAS
+    # 3. QA/QC DE rock_name
     # =========================
-    st.subheader("📊 Estadísticas descriptivas")
-    st.dataframe(df.describe())
+    st.subheader("🪨 Reagrupación litológica")
+
+    st.dataframe(
+        df[[
+            "rock_name",
+            "rock_name_clean",
+            "rock_base",
+            "rock_context",
+            "rock_group"
+        ]].head(50)
+    )
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.write("**Roca base**")
+        st.dataframe(df["rock_base"].value_counts().reset_index())
+
+    with col2:
+        st.write("**Contexto litológico**")
+        st.dataframe(df["rock_context"].value_counts().reset_index())
+
+    with col3:
+        st.write("**Grupo litológico**")
+        st.dataframe(df["rock_group"].value_counts().reset_index())
 
     # =========================
-    # CORRELACIÓN
+    # 4. ESTADÍSTICAS
+    # =========================
+    st.subheader("📊 Estadísticas descriptivas")
+    st.dataframe(descriptive_stats(df))
+
+    # =========================
+    # 5. CORRELACIÓN
     # =========================
     st.subheader("🔗 Matriz de correlación")
-    corr = df.corr(numeric_only=True)
+    corr = correlation_analysis(df)
     st.dataframe(corr)
 
     # =========================
-    # GRÁFICOS
+    # 6. GRÁFICOS
     # =========================
-    st.subheader("📈 Gráfico de dispersión: SiO2 vs TiO2")
-    fig1, ax1 = plt.subplots()
-    sns.scatterplot(data=df, x="SiO2n", y="TiO2n", hue="rock_name", ax=ax1)
-    ax1.set_title("SiO2 vs TiO2")
-    st.pyplot(fig1)
+    st.subheader("📈 Gráficos geoquímicos")
+    st.pyplot(scatter_plot(df))
+    st.pyplot(bar_plot(df))
+    st.pyplot(box_plot(df))
+    st.pyplot(correlation_heatmap(corr))
 
-    st.subheader("📊 Promedio de compuestos por tipo de roca")
-    fig2, ax2 = plt.subplots()
-    df.groupby("rock_name").mean(numeric_only=True)[
-        ["SiO2n", "TiO2n", "Al2O3n"]
-    ].plot(kind="bar", ax=ax2)
-    ax2.set_title("Promedio por roca")
-    ax2.set_ylabel("Concentración (%)")
-    st.pyplot(fig2)
-
-    st.subheader("📦 Boxplot de compuestos")
-    fig3, ax3 = plt.subplots()
-    sns.boxplot(data=df[["SiO2n", "MgOn", "FeO*n"]], ax=ax3)
-    ax3.set_title("Distribución de compuestos")
-    st.pyplot(fig3)
-
-    st.subheader("🔥 Heatmap de correlación")
-    fig4, ax4 = plt.subplots(figsize=(10, 6))
-    sns.heatmap(corr, annot=True, cmap="coolwarm", ax=ax4)
-    ax4.set_title("Matriz de correlación")
-    st.pyplot(fig4)
+    st.subheader("🪨 Distribución por grupo litológico")
+    st.pyplot(bar_plot_rock_group(df))
 
     # =========================
-    # GEOESPACIAL
+    # 7. GEOESPACIAL
     # =========================
     if "long" in df.columns and "lat" in df.columns:
-        st.subheader("🌍 Ubicación de muestras geológicas")
-        fig5, ax5 = plt.subplots()
-        ax5.scatter(df["long"], df["lat"])
-        ax5.set_xlabel("Longitud")
-        ax5.set_ylabel("Latitud")
-        ax5.set_title("Ubicación geográfica")
-        st.pyplot(fig5)
+        st.subheader("🌍 Ubicación de muestras")
+        st.pyplot(plot_locations(df))
+
+    # =========================
+    # 8. VARIABLES GEOQUÍMICAS EXTRA
+    # =========================
+    if "tipo_alumina" in df.columns:
+        st.subheader("🧪 Saturación de alúmina")
+        st.dataframe(df["tipo_alumina"].value_counts().reset_index())
