@@ -4,17 +4,25 @@ import pandas as pd
 
 def clean_rock_name(text):
     if pd.isna(text):
-        return None
+        return "unknown"
 
     text = str(text).strip().lower()
     text = text.replace("?", "")
     text = re.sub(r"\s+", " ", text)
 
+    if text == "":
+        return "unknown"
+
     return text
 
 
 def extract_rock_context(text):
-    if text is None:
+    if pd.isna(text):
+        return "unknown"
+
+    text = str(text).strip().lower()
+
+    if text == "":
         return "unknown"
 
     context_keywords = [
@@ -31,7 +39,12 @@ def extract_rock_context(text):
 
 
 def extract_rock_base(text):
-    if text is None:
+    if pd.isna(text):
+        return "unknown"
+
+    text = str(text).strip().lower()
+
+    if text == "":
         return "unknown"
 
     bases = [
@@ -72,6 +85,14 @@ def assign_rock_group(base, context):
         "quartz monzonite", "monzogranite", "granophyre", "aplite"
     }
 
+    if pd.isna(base):
+        base = "unknown"
+    if pd.isna(context):
+        context = "unknown"
+
+    base = str(base).strip().lower()
+    context = str(context).strip().lower()
+
     if "tuff" in context:
         return "pyroclastic"
     if "breccia" in context or base == "breccia":
@@ -90,6 +111,9 @@ def assign_rock_group(base, context):
 
 def process_rock_names(df):
     df = df.copy()
+
+    if "rock_name" not in df.columns:
+        return df
 
     df["rock_name_clean"] = df["rock_name"].apply(clean_rock_name)
     df["rock_context"] = df["rock_name_clean"].apply(extract_rock_context)
