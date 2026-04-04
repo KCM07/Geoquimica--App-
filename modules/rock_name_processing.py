@@ -70,6 +70,18 @@ def extract_rock_base(text):
         "intrusion"
     ]
 
+    # Casos compuestos
+    if "diorite/andesite" in text:
+        return "diorite_and_andesite"
+    if "gabbro/diorite" in text:
+        return "gabbro_and_diorite"
+    if "microdiorite and dacite" in text:
+        return "microdiorite_and_dacite"
+    if "basaltic andesite/microdiorite" in text:
+        return "basaltic_andesite_and_microdiorite"
+    if "andesite/microdiorite" in text:
+        return "andesite_and_microdiorite"
+
     for base in bases:
         if base in text:
             return base
@@ -82,7 +94,16 @@ def assign_rock_group(base, context):
     plutonic = {
         "gabbro", "diorite", "quartz diorite", "granodiorite",
         "granite", "tonalite", "quartz monzodiorite",
-        "quartz monzonite", "monzogranite", "granophyre", "aplite"
+        "quartz monzonite", "monzogranite", "granophyre", "aplite",
+        "microdiorite"
+    }
+
+    mixed = {
+        "diorite_and_andesite",
+        "gabbro_and_diorite",
+        "microdiorite_and_dacite",
+        "basaltic_andesite_and_microdiorite",
+        "andesite_and_microdiorite"
     }
 
     if pd.isna(base):
@@ -97,6 +118,8 @@ def assign_rock_group(base, context):
         return "pyroclastic"
     if "breccia" in context or base == "breccia":
         return "breccia"
+    if base in mixed:
+        return "mixed_lithology"
     if base in volcanic and any(x in context for x in ["dike", "sill", "plug", "intrusion"]):
         return "subvolcanic"
     if base in volcanic:
@@ -109,6 +132,27 @@ def assign_rock_group(base, context):
     return "other"
 
 
+def extract_observation(text):
+    if pd.isna(text):
+        return "none"
+
+    text = str(text).strip().lower()
+
+    observations = []
+
+    if "altered" in text:
+        observations.append("altered")
+    if "silicic" in text:
+        observations.append("silicic")
+    if "unknown" in text:
+        observations.append("unknown_source")
+
+    if not observations:
+        return "none"
+
+    return ", ".join(observations)
+
+
 def process_rock_names(df):
     df = df.copy()
 
@@ -118,6 +162,7 @@ def process_rock_names(df):
     df["rock_name_clean"] = df["rock_name"].apply(clean_rock_name)
     df["rock_context"] = df["rock_name_clean"].apply(extract_rock_context)
     df["rock_base"] = df["rock_name_clean"].apply(extract_rock_base)
+    df["rock_observation"] = df["rock_name_clean"].apply(extract_observation)
 
     df["rock_group"] = df.apply(
         lambda row: assign_rock_group(row["rock_base"], row["rock_context"]),

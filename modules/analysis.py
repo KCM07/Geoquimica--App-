@@ -23,7 +23,6 @@ def add_geochemical_variables(df):
 
 
 def descriptive_stats(df):
-
     oxidos = [
         "SiO2n", "TiO2n", "Al2O3n",
         "FeO*n", "MnOn", "MgOn",
@@ -31,17 +30,10 @@ def descriptive_stats(df):
     ]
 
     cols_validas = [col for col in oxidos if col in df.columns]
-
-    stats = df[cols_validas].describe()
-
-    print("\nEstadísticas descriptivas:")
-    print(stats)
-
-    return stats
+    return df[cols_validas].describe().round(2)
 
 
 def correlation_analysis(df):
-
     oxidos = [
         "SiO2n", "TiO2n", "Al2O3n",
         "FeO*n", "MnOn", "MgOn",
@@ -49,10 +41,4 @@ def correlation_analysis(df):
     ]
 
     cols_validas = [col for col in oxidos if col in df.columns]
-
-    corr = df[cols_validas].corr()
-
-    print("\nMatriz de correlación:")
-    print(corr)
-
-    return corr
+    return df[cols_validas].corr().round(2)

@@ -229,6 +229,7 @@ if uploaded_file:
                 "rock_name_clean",
                 "rock_base",
                 "rock_context",
+                "rock_observation",
                 "rock_group"
             ]],
             use_container_width=True,
