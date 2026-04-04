@@ -301,6 +301,7 @@ if uploaded_file:
         corr = correlation_analysis(df)
         st.dataframe(corr, use_container_width=True)
 
+
         # =========================
         # 9. GRÁFICOS
         # =========================
