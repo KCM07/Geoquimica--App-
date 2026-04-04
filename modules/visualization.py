@@ -14,14 +14,7 @@ plt.rcParams.update({
 
 def scatter_plot(df):
     fig, ax = plt.subplots(figsize=(6, 4))
-    sns.scatterplot(
-        data=df,
-        x="SiO2n",
-        y="TiO2n",
-        hue="rock_group" if "rock_group" in df.columns else "rock_name",
-        s=25,
-        ax=ax
-    )
+    sns.scatterplot(data=df, x="SiO2n", y="TiO2n", hue="rock_name", s=25, ax=ax)
     ax.set_title("SiO2 vs TiO2")
     ax.set_xlabel("SiO2 (%)")
     ax.set_ylabel("TiO2 (%)")
