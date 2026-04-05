@@ -1,12 +1,11 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-import pandas as pd
+import numpy as np
 
 plt.rcParams.update({
-    "figure.figsize": (6, 4),
+    "figure.figsize": (7, 4.5),
     "font.size": 8,
-    "axes.titlesize": 9,
+    "axes.titlesize": 10,
     "axes.labelsize": 8,
     "xtick.labelsize": 7,
     "ytick.labelsize": 7,
@@ -14,63 +13,24 @@ plt.rcParams.update({
 })
 
 
-def scatter_plot(df):
-    df_plot = df.copy()
-
-    color_col = "rock_group" if "rock_group" in df_plot.columns else "rock_name"
-
-    if "rock_group" in df_plot.columns:
-        df_plot = df_plot[~df_plot["rock_group"].isin(["other", "ambiguous_intrusion"])]
-
-    fig, ax = plt.subplots(figsize=(8, 5))
-
-    sns.scatterplot(
-        data=df_plot,
-        x="SiO2n",
-        y="TiO2n",
-        hue=color_col,
-        style=color_col,
-        palette="Set2",
-        s=35,
-        alpha=0.7,
-        edgecolor="white",
-        linewidth=0.3,
-        ax=ax
-    )
-
-    ax.set_title("SiO₂ vs TiO₂ (Clasificación litológica)", fontsize=11)
-    ax.set_xlabel("SiO₂ (%)")
-    ax.set_ylabel("TiO₂ (%)")
-    ax.grid(True, linestyle="--", alpha=0.3)
-
-    ax.legend(
-        title="Grupo",
-        fontsize=7,
-        title_fontsize=8,
-        loc="upper right",
-        frameon=True
-    )
-
-    plt.tight_layout()
-    return fig
-
-
-def tas_plot(df):
-    if "alkalis" not in df.columns:
+def scatter_plot(df, x_col="SiO2n", y_col="TiO2n", color_col="rock_group"):
+    if x_col not in df.columns or y_col not in df.columns:
         return None
 
     df_plot = df.copy()
-    color_col = "rock_group" if "rock_group" in df_plot.columns else "rock_name"
+
+    if color_col not in df_plot.columns:
+        color_col = None
 
     fig, ax = plt.subplots(figsize=(8, 5))
 
     sns.scatterplot(
         data=df_plot,
-        x="SiO2n",
-        y="alkalis",
+        x=x_col,
+        y=y_col,
         hue=color_col,
-        style=color_col,
-        palette="Set2",
+        style=color_col if color_col else None,
+        palette="Set2" if color_col else None,
         s=35,
         alpha=0.75,
         edgecolor="white",
@@ -78,38 +38,77 @@ def tas_plot(df):
         ax=ax
     )
 
-    ax.set_title("Diagrama TAS (SiO₂ vs Na₂O + K₂O)", fontsize=11)
-    ax.set_xlabel("SiO₂ (%)")
-    ax.set_ylabel("Na₂O + K₂O (%)")
+    ax.set_title(f"{x_col} vs {y_col}")
+    ax.set_xlabel(x_col)
+    ax.set_ylabel(y_col)
     ax.grid(True, linestyle="--", alpha=0.3)
 
-    ax.legend(
-        title="Grupo",
-        fontsize=7,
-        title_fontsize=8,
-        loc="upper left",
-        frameon=True
-    )
+    if color_col:
+        ax.legend(title=color_col, fontsize=7, title_fontsize=8, loc="best", frameon=True)
 
     plt.tight_layout()
     return fig
 
 
-def harker_plot(df, y_col):
-    if y_col not in df.columns or "SiO2n" not in df.columns:
+def tas_plot(df, color_col="rock_group"):
+    if "SiO2n" not in df.columns or "alkalis" not in df.columns:
         return None
 
     df_plot = df.copy()
-    color_col = "rock_group" if "rock_group" in df_plot.columns else "rock_name"
 
-    fig, ax = plt.subplots(figsize=(7, 4.5))
+    fig, ax = plt.subplots(figsize=(8, 5))
 
     sns.scatterplot(
         data=df_plot,
         x="SiO2n",
+        y="alkalis",
+        hue=color_col if color_col in df_plot.columns else None,
+        style=color_col if color_col in df_plot.columns else None,
+        palette="Set2" if color_col in df_plot.columns else None,
+        s=35,
+        alpha=0.75,
+        edgecolor="white",
+        linewidth=0.3,
+        ax=ax
+    )
+
+    # Límites simplificados TAS
+    ax.axvline(45, color="gray", linestyle="--", linewidth=0.8)
+    ax.axvline(52, color="gray", linestyle="--", linewidth=0.8)
+    ax.axvline(57, color="gray", linestyle="--", linewidth=0.8)
+    ax.axvline(63, color="gray", linestyle="--", linewidth=0.8)
+    ax.axvline(69, color="gray", linestyle="--", linewidth=0.8)
+
+    ax.text(41, 1, "Basalt", fontsize=7)
+    ax.text(49, 2, "Basaltic\nandesite", fontsize=7, ha="center")
+    ax.text(54.5, 3, "Andesite", fontsize=7, ha="center")
+    ax.text(60, 4, "Dacite", fontsize=7, ha="center")
+    ax.text(72, 5, "Rhyolite", fontsize=7, ha="center")
+
+    ax.set_title("Diagrama TAS")
+    ax.set_xlabel("SiO2 (%)")
+    ax.set_ylabel("Na2O + K2O (%)")
+    ax.grid(True, linestyle="--", alpha=0.3)
+
+    if color_col in df_plot.columns:
+        ax.legend(title=color_col, fontsize=7, title_fontsize=8, loc="best", frameon=True)
+
+    plt.tight_layout()
+    return fig
+
+
+def harker_plot(df, y_col, color_col="rock_group"):
+    if "SiO2n" not in df.columns or y_col not in df.columns:
+        return None
+
+    fig, ax = plt.subplots(figsize=(7, 4.5))
+
+    sns.scatterplot(
+        data=df,
+        x="SiO2n",
         y=y_col,
-        hue=color_col,
-        palette="Set2",
+        hue=color_col if color_col in df.columns else None,
+        palette="Set2" if color_col in df.columns else None,
         s=30,
         alpha=0.7,
         edgecolor="white",
@@ -117,95 +116,73 @@ def harker_plot(df, y_col):
         ax=ax
     )
 
-    ax.set_title(f"Diagrama de Harker: SiO₂ vs {y_col}", fontsize=10)
-    ax.set_xlabel("SiO₂ (%)")
-    ax.set_ylabel(y_col)
-    ax.grid(True, linestyle="--", alpha=0.3)
-
-    ax.legend(
-        title="Grupo",
-        fontsize=6,
-        title_fontsize=7,
-        loc="best",
-        frameon=True
-    )
-
-    plt.tight_layout()
-    return fig
-
-
-def bar_plot(df):
-    fig, ax = plt.subplots(figsize=(7, 4))
-
-    if "rock_base" in df.columns:
-        tabla = df.groupby("rock_base").mean(numeric_only=True)[
-            ["SiO2n", "TiO2n", "Al2O3n"]
-        ].head(10)
-    else:
-        tabla = df.groupby("rock_name").mean(numeric_only=True)[
-            ["SiO2n", "TiO2n", "Al2O3n"]
-        ].head(10)
-
-    tabla.plot(kind="bar", ax=ax)
-
-    ax.set_title("Promedio por roca base")
-    ax.set_ylabel("Concentración (%)")
-    plt.xticks(rotation=35, ha="right")
-    plt.tight_layout()
-    return fig
-
-
-def bar_plot_rock_group(df):
-    fig, ax = plt.subplots(figsize=(6, 4))
-
-    if "rock_group" in df.columns:
-        df["rock_group"].value_counts().plot(kind="bar", ax=ax)
-        ax.set_title("Distribución por grupo litológico")
-        ax.set_ylabel("Frecuencia")
-        plt.xticks(rotation=25, ha="right")
-        plt.tight_layout()
-    else:
-        ax.text(0.5, 0.5, "rock_group no disponible", ha="center", va="center")
-        ax.axis("off")
-
-    return fig
-
-
-def group_mean_plot(df):
-    if "rock_group" not in df.columns:
-        return None
-
-    fig, ax = plt.subplots(figsize=(8, 4.5))
-
-    tabla = df.groupby("rock_group").mean(numeric_only=True)[
-        ["SiO2n", "TiO2n", "Al2O3n", "MgOn"]
-    ]
-
-    tabla.plot(kind="bar", ax=ax)
-    ax.set_title("Promedio geoquímico por grupo litológico")
-    ax.set_ylabel("Concentración (%)")
-    plt.xticks(rotation=20, ha="right")
-    plt.tight_layout()
-    return fig
-
-
-def box_plot(df):
-    fig, ax = plt.subplots(figsize=(7, 5))
-
-    cols = ["SiO2n", "MgOn", "FeO*n"]
-    cols = [c for c in cols if c in df.columns]
-
-    df_melt = df[cols].melt(var_name="Óxido", value_name="Valor")
-
-    sns.boxplot(
-        data=df_melt,
-        x="Óxido",
-        y="Valor",
-        palette="Set3",
+    # línea de tendencia global
+    sns.regplot(
+        data=df,
+        x="SiO2n",
+        y=y_col,
+        scatter=False,
+        ci=None,
+        line_kws={"color": "black", "linewidth": 1},
         ax=ax
     )
 
-    ax.set_title("Distribución geoquímica")
+    ax.set_title(f"Harker: SiO2 vs {y_col}")
+    ax.set_xlabel("SiO2 (%)")
+    ax.set_ylabel(y_col)
+    ax.grid(True, linestyle="--", alpha=0.3)
+
+    if color_col in df.columns:
+        ax.legend(title=color_col, fontsize=6, title_fontsize=7, loc="best", frameon=True)
+
+    plt.tight_layout()
+    return fig
+
+
+def correlation_heatmap(corr):
+    fig, ax = plt.subplots(figsize=(7, 5))
+
+    sns.heatmap(
+        corr,
+        annot=True,
+        fmt=".2f",
+        cmap="coolwarm",
+        center=0,
+        square=True,
+        linewidths=0.5,
+        annot_kws={"size": 7},
+        cbar_kws={"shrink": 0.8},
+        ax=ax
+    )
+
+    ax.set_title("Correlación entre óxidos mayores")
+    plt.xticks(rotation=45, ha="right", fontsize=7)
+    plt.yticks(fontsize=7)
+    plt.tight_layout()
+    return fig
+
+
+def strong_corr_barplot(corr, top_n=10):
+    pairs = []
+
+    cols = list(corr.columns)
+    for i in range(len(cols)):
+        for j in range(i + 1, len(cols)):
+            pairs.append((f"{cols[i]} vs {cols[j]}", corr.iloc[i, j]))
+
+    pairs = sorted(pairs, key=lambda x: abs(x[1]), reverse=True)[:top_n]
+
+    if not pairs:
+        return None
+
+    names = [p[0] for p in pairs]
+    values = [p[1] for p in pairs]
+
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    ax.bar(names, values)
+    ax.set_title("Correlaciones más fuertes")
+    ax.set_ylabel("r")
+    plt.xticks(rotation=45, ha="right")
     plt.tight_layout()
     return fig
 
@@ -232,7 +209,7 @@ def box_plot_by_group(df, y_col="SiO2n"):
     return fig
 
 
-def histogram_plot(df, col="SiO2n"):
+def histogram_plot(df, col):
     if col not in df.columns:
         return None
 
@@ -247,57 +224,104 @@ def histogram_plot(df, col="SiO2n"):
         ax=ax
     )
 
-    ax.set_title(f"Histograma de {col}")
+    ax.set_title(f"Distribución de {col}")
     ax.set_xlabel(col)
     ax.set_ylabel("Frecuencia")
     plt.tight_layout()
     return fig
 
 
-def oxide_balance_histogram(df):
-    if "total_oxidos" not in df.columns:
+def cumulative_frequency_plot(df, col):
+    if col not in df.columns:
         return None
 
+    values = df[col].dropna().sort_values().reset_index(drop=True)
+    if len(values) == 0:
+        return None
+
+    cumfreq = np.arange(1, len(values) + 1) / len(values) * 100
+
     fig, ax = plt.subplots(figsize=(7, 4))
-
-    sns.histplot(
-        data=df,
-        x="total_oxidos",
-        bins=30,
-        kde=True,
-        color="darkorange",
-        ax=ax
-    )
-
-    ax.axvline(95, color="red", linestyle="--", linewidth=1)
-    ax.axvline(105, color="red", linestyle="--", linewidth=1)
-
-    ax.set_title("Balance de óxidos")
-    ax.set_xlabel("Suma de óxidos (%)")
-    ax.set_ylabel("Frecuencia")
+    ax.plot(values, cumfreq, marker=".", linestyle="-")
+    ax.set_title(f"Frecuencia acumulada de {col}")
+    ax.set_xlabel(col)
+    ax.set_ylabel("Frecuencia acumulada (%)")
+    ax.grid(True, linestyle="--", alpha=0.3)
     plt.tight_layout()
     return fig
 
 
-def correlation_heatmap(corr):
-    fig, ax = plt.subplots(figsize=(7, 5))
+def qq_style_plot(df, col):
+    if col not in df.columns:
+        return None
 
-    sns.heatmap(
-        corr,
-        annot=True,
-        fmt=".2f",
-        cmap="coolwarm",
-        center=0,
-        square=True,
-        linewidths=0.5,
-        annot_kws={"size": 7},
-        cbar_kws={"shrink": 0.8},
+    values = df[col].dropna().sort_values().reset_index(drop=True)
+    if len(values) == 0:
+        return None
+
+    probs = (np.arange(1, len(values) + 1) - 0.5) / len(values)
+    theoretical = np.quantile(np.random.normal(size=5000), probs)
+
+    fig, ax = plt.subplots(figsize=(6, 4.5))
+    ax.scatter(theoretical, values, s=10, alpha=0.7)
+    ax.set_title(f"QQ aproximado - {col}")
+    ax.set_xlabel("Cuantiles teóricos")
+    ax.set_ylabel("Cuantiles observados")
+    ax.grid(True, linestyle="--", alpha=0.3)
+    plt.tight_layout()
+    return fig
+
+
+def magmatic_series_plot(df, color_col="rock_group"):
+    # aproximación simple: Fe/Mg vs SiO2
+    if "SiO2n" not in df.columns or "Fe_Mg_ratio" not in df.columns:
+        return None
+
+    fig, ax = plt.subplots(figsize=(7, 4.5))
+
+    sns.scatterplot(
+        data=df,
+        x="SiO2n",
+        y="Fe_Mg_ratio",
+        hue=color_col if color_col in df.columns else None,
+        palette="Set2" if color_col in df.columns else None,
+        s=30,
+        alpha=0.75,
+        edgecolor="white",
+        linewidth=0.3,
         ax=ax
     )
 
-    ax.set_title("Correlación entre óxidos mayores", fontsize=11)
+    sns.regplot(
+        data=df,
+        x="SiO2n",
+        y="Fe_Mg_ratio",
+        scatter=False,
+        ci=None,
+        line_kws={"color": "black", "linewidth": 1},
+        ax=ax
+    )
 
-    plt.xticks(rotation=45, ha="right", fontsize=7)
-    plt.yticks(fontsize=7)
+    ax.set_title("Tendencia magmática aproximada (Fe/Mg vs SiO2)")
+    ax.set_xlabel("SiO2 (%)")
+    ax.set_ylabel("FeO* / MgO")
+    ax.grid(True, linestyle="--", alpha=0.3)
+
+    if color_col in df.columns:
+        ax.legend(title=color_col, fontsize=7, title_fontsize=8, loc="best", frameon=True)
+
+    plt.tight_layout()
+    return fig
+
+
+def bar_plot_rock_group(df):
+    if "rock_group" not in df.columns:
+        return None
+
+    fig, ax = plt.subplots(figsize=(6, 4))
+    df["rock_group"].value_counts().plot(kind="bar", ax=ax)
+    ax.set_title("Distribución por grupo litológico")
+    ax.set_ylabel("Frecuencia")
+    plt.xticks(rotation=25, ha="right")
     plt.tight_layout()
     return fig

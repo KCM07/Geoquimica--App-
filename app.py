@@ -13,13 +13,13 @@ from modules.visualization import (
     scatter_plot,
     tas_plot,
     harker_plot,
-    bar_plot,
-    box_plot,
+    correlation_heatmap,
+    strong_corr_barplot,
     box_plot_by_group,
     histogram_plot,
-    oxide_balance_histogram,
-    group_mean_plot,
-    correlation_heatmap,
+    cumulative_frequency_plot,
+    qq_style_plot,
+    magmatic_series_plot,
     bar_plot_rock_group
 )
 from modules.geospatial import plot_locations
@@ -107,6 +107,24 @@ if uploaded_file:
         df = clean_data(df)
         df = add_geochemical_variables(df)
         df = process_rock_names(df)
+
+        # =========================
+        # FILTROS
+        # =========================
+        st.subheader("🎛️ Filtros")
+
+        df_filtrado = df.copy()
+
+        if "rock_group" in df.columns:
+            grupos = sorted(df["rock_group"].dropna().unique().tolist())
+            grupos_sel = st.multiselect(
+                "Filtrar por rock_group",
+                grupos,
+                default=grupos
+            )
+            df_filtrado = df_filtrado[df_filtrado["rock_group"].isin(grupos_sel)]
+
+        st.write(f"Filas después de filtros: {df_filtrado.shape[0]}")
 
         # 1. Visualización de datos
         st.subheader("📋 Visualización de los datos")
