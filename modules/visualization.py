@@ -346,7 +346,6 @@ def group_mean_plot(df):
     plt.tight_layout()
     return fig
 
-
 def oxide_balance_histogram(df):
     if "total_oxidos" not in df.columns:
         return None
