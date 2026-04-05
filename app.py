@@ -11,8 +11,14 @@ from modules.analysis import (
 )
 from modules.visualization import (
     scatter_plot,
+    tas_plot,
+    harker_plot,
     bar_plot,
     box_plot,
+    box_plot_by_group,
+    histogram_plot,
+    oxide_balance_histogram,
+    group_mean_plot,
     correlation_heatmap,
     bar_plot_rock_group
 )
@@ -272,13 +278,58 @@ if uploaded_file:
 
         # 8. Gráficos
         st.subheader("📈 Gráficos geoquímicos")
-        st.pyplot(scatter_plot(df))
-        st.pyplot(bar_plot(df))
-        st.pyplot(box_plot(df))
-        st.pyplot(correlation_heatmap(corr))
+
+        fig_scatter = scatter_plot(df)
+        if fig_scatter is not None:
+            st.pyplot(fig_scatter)
+
+        fig_tas = tas_plot(df)
+        if fig_tas is not None:
+            st.subheader("🔥 Diagrama TAS")
+            st.pyplot(fig_tas)
+
+        st.subheader("🧪 Diagramas de Harker")
+        for elem in ["TiO2n", "MgOn", "FeO*n", "CaOn", "Al2O3n", "Na2On", "K2On"]:
+            fig_harker = harker_plot(df, elem)
+            if fig_harker is not None:
+                st.pyplot(fig_harker)
+
+        st.subheader("📊 Promedios geoquímicos")
+        fig_bar = bar_plot(df)
+        if fig_bar is not None:
+            st.pyplot(fig_bar)
+
+        fig_group_mean = group_mean_plot(df)
+        if fig_group_mean is not None:
+            st.pyplot(fig_group_mean)
+
+        st.subheader("📦 Distribuciones")
+        fig_box = box_plot(df)
+        if fig_box is not None:
+            st.pyplot(fig_box)
+
+        fig_box_group = box_plot_by_group(df, "SiO2n")
+        if fig_box_group is not None:
+            st.pyplot(fig_box_group)
+
+        fig_hist = histogram_plot(df, "SiO2n")
+        if fig_hist is not None:
+            st.pyplot(fig_hist)
+
+        if "total_oxidos" in df_qc.columns:
+            fig_balance = oxide_balance_histogram(df_qc)
+            if fig_balance is not None:
+                st.pyplot(fig_balance)
 
         st.subheader("🪨 Distribución por grupo litológico")
-        st.pyplot(bar_plot_rock_group(df))
+        fig_group = bar_plot_rock_group(df)
+        if fig_group is not None:
+            st.pyplot(fig_group)
+
+        st.subheader("🔗 Mapa de correlación")
+        fig_corr = correlation_heatmap(corr)
+        if fig_corr is not None:
+            st.pyplot(fig_corr)
 
         # 9. Geoespacial
         if "long" in df.columns and "lat" in df.columns:
