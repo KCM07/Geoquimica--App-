@@ -1,15 +1,17 @@
-# ================================
-# PROYECTO GEOQUÍMICO - PYTHON
-# ================================
-
 from modules.loader import load_data
 from modules.cleaning import clean_data
-from modules.analysis import descriptive_stats, correlation_analysis
+from modules.analysis import (
+    descriptive_stats,
+    correlation_analysis,
+    add_geochemical_variables,
+    strong_correlations
+)
 from modules.visualization import (
     scatter_plot,
     bar_plot,
     box_plot,
-    correlation_heatmap
+    correlation_heatmap,
+    bar_plot_rock_group
 )
 from modules.geospatial import plot_locations
 from modules.rock_name_processing import process_rock_names
@@ -51,29 +53,6 @@ def qa_qc_report(df):
     return df
 
 
-def add_geochemical_variables(df):
-    if "Na2On" in df.columns and "K2On" in df.columns:
-        df["alkalis"] = df["Na2On"] + df["K2On"]
-
-    if "FeO*n" in df.columns and "MgOn" in df.columns:
-        df["Fe_Mg_ratio"] = df["FeO*n"] / df["MgOn"]
-
-    if all(col in df.columns for col in ["Al2O3n", "CaOn", "Na2On", "K2On"]):
-        df["A_CNK"] = df["Al2O3n"] / (df["CaOn"] + df["Na2On"] + df["K2On"])
-
-        def classify_alumina(x):
-            if x < 1:
-                return "Metaluminoso"
-            elif x > 1:
-                return "Peraluminoso"
-            else:
-                return "Transicional"
-
-        df["tipo_alumina"] = df["A_CNK"].apply(classify_alumina)
-
-    return df
-
-
 def print_lithology_summary(df):
     print("\n" + "=" * 60)
     print("RESUMEN LITOLÓGICO REAGRUPADO")
@@ -93,66 +72,44 @@ def print_lithology_summary(df):
 
 
 def main():
-    # =========================
-    # 1. CARGAR DATOS
-    # =========================
     path = "data/2_Geology_dataset.csv"
     df = load_data(path)
 
-    # =========================
-    # 2. QA/QC INICIAL
-    # =========================
+    if df is None:
+        return
+
     df = qa_qc_report(df)
-
-    # =========================
-    # 3. LIMPIEZA
-    # =========================
     df = clean_data(df)
-
-    # =========================
-    # 4. VARIABLES GEOQUÍMICAS
-    # =========================
     df = add_geochemical_variables(df)
 
-    # =========================
-    # 5. LIMPIEZA Y REAGRUPACIÓN DE rock_name
-    # =========================
     if "rock_name" in df.columns:
         df = process_rock_names(df)
 
-    # =========================
-    # 6. ESTADÍSTICAS
-    # =========================
     print("\n" + "=" * 60)
     print("ESTADÍSTICAS DESCRIPTIVAS")
     print("=" * 60)
     print(descriptive_stats(df))
 
-    # =========================
-    # 7. CORRELACIÓN
-    # =========================
     print("\n" + "=" * 60)
     print("MATRIZ DE CORRELACIÓN")
     print("=" * 60)
     corr = correlation_analysis(df)
     print(corr)
 
-    # =========================
-    # 8. VISUALIZACIÓN
-    # =========================
+    print("\n" + "=" * 60)
+    print("CORRELACIONES FUERTES")
+    print("=" * 60)
+    print(strong_correlations(corr))
+
     scatter_plot(df)
     bar_plot(df)
     box_plot(df)
     correlation_heatmap(corr)
+    bar_plot_rock_group(df)
 
-    # =========================
-    # 9. GEOESPACIAL
-    # =========================
-    plot_locations(df)
+    if "long" in df.columns and "lat" in df.columns:
+        plot_locations(df)
 
-    # =========================
-    # 10. RESÚMENES EXTRA
-    # =========================
     if "tipo_alumina" in df.columns:
         print("\nClasificación de saturación de alúmina:")
         print(df["tipo_alumina"].value_counts())

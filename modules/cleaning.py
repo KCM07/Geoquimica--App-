@@ -36,10 +36,16 @@ def qa_qc_report(df):
         report["balance_oxidos"] = df["total_oxidos"].describe()
 
     rangos = {}
+
     if "SiO2n" in df.columns:
-        rangos["SiO2_fuera_rango"] = int(df[(df["SiO2n"] < 30) | (df["SiO2n"] > 80)].shape[0])
+        rangos["SiO2_fuera_rango"] = int(
+            df[(df["SiO2n"] < 30) | (df["SiO2n"] > 80)].shape[0]
+        )
+
     if "TiO2n" in df.columns:
-        rangos["TiO2_fuera_rango"] = int(df[(df["TiO2n"] < 0) | (df["TiO2n"] > 6)].shape[0])
+        rangos["TiO2_fuera_rango"] = int(
+            df[(df["TiO2n"] < 0) | (df["TiO2n"] > 6)].shape[0]
+        )
 
     report["rangos"] = rangos
 

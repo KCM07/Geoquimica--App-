@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pandas as pd
 
 plt.rcParams.update({
     "figure.figsize": (6, 4),
@@ -13,20 +14,60 @@ plt.rcParams.update({
 
 
 def scatter_plot(df):
-    fig, ax = plt.subplots(figsize=(6, 4))
-    sns.scatterplot(data=df, x="SiO2n", y="TiO2n", hue="rock_name", s=25, ax=ax)
-    ax.set_title("SiO2 vs TiO2")
-    ax.set_xlabel("SiO2 (%)")
-    ax.set_ylabel("TiO2 (%)")
+    df_plot = df.copy()
+
+    color_col = "rock_group" if "rock_group" in df_plot.columns else "rock_name"
+
+    if "rock_group" in df_plot.columns:
+        df_plot = df_plot[~df_plot["rock_group"].isin(["other", "ambiguous_intrusion"])]
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    sns.scatterplot(
+        data=df_plot,
+        x="SiO2n",
+        y="TiO2n",
+        hue=color_col,
+        style=color_col,
+        palette="Set2",
+        s=35,
+        alpha=0.7,
+        edgecolor="white",
+        linewidth=0.3,
+        ax=ax
+    )
+
+    ax.set_title("SiO₂ vs TiO₂ (Clasificación litológica)", fontsize=11)
+    ax.set_xlabel("SiO₂ (%)")
+    ax.set_ylabel("TiO₂ (%)")
+    ax.grid(True, linestyle="--", alpha=0.3)
+
+    ax.legend(
+        title="Grupo",
+        fontsize=7,
+        title_fontsize=8,
+        loc="upper right",
+        frameon=True
+    )
+
     plt.tight_layout()
     return fig
 
 
 def bar_plot(df):
     fig, ax = plt.subplots(figsize=(7, 4))
-    df.groupby("rock_base").mean(numeric_only=True)[
-        ["SiO2n", "TiO2n", "Al2O3n"]
-    ].head(10).plot(kind="bar", ax=ax)
+
+    if "rock_base" in df.columns:
+        tabla = df.groupby("rock_base").mean(numeric_only=True)[
+            ["SiO2n", "TiO2n", "Al2O3n"]
+        ].head(10)
+    else:
+        tabla = df.groupby("rock_name").mean(numeric_only=True)[
+            ["SiO2n", "TiO2n", "Al2O3n"]
+        ].head(10)
+
+    tabla.plot(kind="bar", ax=ax)
+
     ax.set_title("Promedio por roca base")
     ax.set_ylabel("Concentración (%)")
     plt.xticks(rotation=35, ha="right")
@@ -35,34 +76,61 @@ def bar_plot(df):
 
 
 def box_plot(df):
-    fig, ax = plt.subplots(figsize=(6, 4))
-    sns.boxplot(data=df[["SiO2n", "MgOn", "FeO*n"]], ax=ax)
-    ax.set_title("Distribución de compuestos")
+    fig, ax = plt.subplots(figsize=(7, 5))
+
+    cols = ["SiO2n", "MgOn", "FeO*n"]
+    cols = [c for c in cols if c in df.columns]
+
+    df_melt = df[cols].melt(var_name="Óxido", value_name="Valor")
+
+    sns.boxplot(
+        data=df_melt,
+        x="Óxido",
+        y="Valor",
+        palette="Set3",
+        ax=ax
+    )
+
+    ax.set_title("Distribución geoquímica")
     plt.tight_layout()
     return fig
 
 
 def correlation_heatmap(corr):
     fig, ax = plt.subplots(figsize=(7, 5))
+
     sns.heatmap(
         corr,
         annot=True,
         fmt=".2f",
         cmap="coolwarm",
-        annot_kws={"size": 6},
+        center=0,
+        square=True,
+        linewidths=0.5,
+        annot_kws={"size": 7},
+        cbar_kws={"shrink": 0.8},
         ax=ax
     )
-    ax.set_title("Matriz de correlación")
-    plt.xticks(rotation=45, ha="right")
+
+    ax.set_title("Correlación entre óxidos mayores", fontsize=11)
+
+    plt.xticks(rotation=45, ha="right", fontsize=7)
+    plt.yticks(fontsize=7)
     plt.tight_layout()
     return fig
 
 
 def bar_plot_rock_group(df):
     fig, ax = plt.subplots(figsize=(6, 4))
-    df["rock_group"].value_counts().plot(kind="bar", ax=ax)
-    ax.set_title("Distribución por grupo litológico")
-    ax.set_ylabel("Frecuencia")
-    plt.xticks(rotation=25, ha="right")
-    plt.tight_layout()
+
+    if "rock_group" in df.columns:
+        df["rock_group"].value_counts().plot(kind="bar", ax=ax)
+        ax.set_title("Distribución por grupo litológico")
+        ax.set_ylabel("Frecuencia")
+        plt.xticks(rotation=25, ha="right")
+        plt.tight_layout()
+    else:
+        ax.text(0.5, 0.5, "rock_group no disponible", ha="center", va="center")
+        ax.axis("off")
+
     return fig

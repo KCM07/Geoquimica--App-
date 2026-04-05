@@ -70,7 +70,6 @@ def extract_rock_base(text):
         "intrusion"
     ]
 
-    # Casos compuestos
     if "diorite/andesite" in text:
         return "diorite_and_andesite"
     if "gabbro/diorite" in text:

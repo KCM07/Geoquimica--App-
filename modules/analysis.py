@@ -1,16 +1,35 @@
+import numpy as np
+import pandas as pd
+
+
 def add_geochemical_variables(df):
     df = df.copy()
 
+    # Alcalinidad total
     if "Na2On" in df.columns and "K2On" in df.columns:
         df["alkalis"] = df["Na2On"] + df["K2On"]
 
+    # Relación Fe/Mg
     if "FeO*n" in df.columns and "MgOn" in df.columns:
-        df["Fe_Mg_ratio"] = df["FeO*n"] / df["MgOn"]
+        df["Fe_Mg_ratio"] = np.where(
+            df["MgOn"] != 0,
+            df["FeO*n"] / df["MgOn"],
+            np.nan
+        )
 
+    # Índice A/CNK
     if all(col in df.columns for col in ["Al2O3n", "CaOn", "Na2On", "K2On"]):
-        df["A_CNK"] = df["Al2O3n"] / (df["CaOn"] + df["Na2On"] + df["K2On"])
+        denominador = df["CaOn"] + df["Na2On"] + df["K2On"]
+
+        df["A_CNK"] = np.where(
+            denominador != 0,
+            df["Al2O3n"] / denominador,
+            np.nan
+        )
 
         def classify_alumina(x):
+            if pd.isna(x):
+                return "Indeterminado"
             if x < 1:
                 return "Metaluminoso"
             elif x > 1:
@@ -42,3 +61,21 @@ def correlation_analysis(df):
 
     cols_validas = [col for col in oxidos if col in df.columns]
     return df[cols_validas].corr().round(2)
+
+
+def strong_correlations(corr, threshold=0.7):
+    pares = []
+
+    for i in range(len(corr.columns)):
+        for j in range(i + 1, len(corr.columns)):
+            val = corr.iloc[i, j]
+            if abs(val) >= threshold:
+                pares.append([corr.columns[i], corr.columns[j], round(val, 2)])
+
+    if not pares:
+        return pd.DataFrame(columns=["Variable 1", "Variable 2", "Correlación"])
+
+    return pd.DataFrame(
+        pares,
+        columns=["Variable 1", "Variable 2", "Correlación"]
+    ).sort_values(by="Correlación", ascending=False)

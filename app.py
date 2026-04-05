@@ -6,7 +6,8 @@ from modules.cleaning import clean_data
 from modules.analysis import (
     descriptive_stats,
     correlation_analysis,
-    add_geochemical_variables
+    add_geochemical_variables,
+    strong_correlations
 )
 from modules.visualization import (
     scatter_plot,
@@ -39,7 +40,6 @@ def build_qc_table(df: pd.DataFrame) -> pd.DataFrame:
 
     df_qc["QC_flag"] = ""
 
-    # Balance de óxidos
     oxidos_presentes = [col for col in oxidos if col in df_qc.columns]
     df_qc["total_oxidos"] = df_qc[oxidos_presentes].sum(axis=1, skipna=True)
 
@@ -48,7 +48,6 @@ def build_qc_table(df: pd.DataFrame) -> pd.DataFrame:
         "QC_flag"
     ] += "Balance de óxidos fuera de rango; "
 
-    # Rangos geoquímicos básicos
     if "SiO2n" in df_qc.columns:
         df_qc.loc[
             (df_qc["SiO2n"] < 30) | (df_qc["SiO2n"] > 80),
@@ -73,7 +72,6 @@ def build_qc_table(df: pd.DataFrame) -> pd.DataFrame:
             "QC_flag"
         ] += "MgO fuera de rango; "
 
-    # Nulos en columnas principales
     principales = ["rock_name", "SiO2n", "Al2O3n", "FeO*n", "MgOn"]
     existentes = [c for c in principales if c in df_qc.columns]
     if existentes:
@@ -89,10 +87,14 @@ def highlight_qc(row):
     return [""] * len(row)
 
 
+def resumen_columna(df, col):
+    conteo = df[col].value_counts().reset_index()
+    conteo.columns = [col, "frecuencia"]
+    conteo["porcentaje (%)"] = (conteo["frecuencia"] / len(df) * 100).round(2)
+    return conteo
+
+
 if uploaded_file:
-    # =========================
-    # 1. CARGA Y LIMPIEZA
-    # =========================
     df = load_data(uploaded_file)
 
     if df is not None:
@@ -100,9 +102,7 @@ if uploaded_file:
         df = add_geochemical_variables(df)
         df = process_rock_names(df)
 
-        # =========================
-        # 2. VISTA INTERACTIVA
-        # =========================
+        # 1. Visualización de datos
         st.subheader("📋 Visualización de los datos")
         st.write(f"Filas totales: {df.shape[0]} | Columnas: {df.shape[1]}")
 
@@ -142,9 +142,7 @@ if uploaded_file:
         elif modo == "Ver todo":
             st.dataframe(df, use_container_width=True, height=500)
 
-        # =========================
-        # 3. ESTRUCTURA DE DATOS
-        # =========================
+        # 2. Estructura de datos
         st.subheader("📊 Estructura de variables")
 
         oxidos = [
@@ -155,7 +153,6 @@ if uploaded_file:
         calculadas = [col for col in ["alkalis", "Fe_Mg_ratio", "A_CNK", "tipo_alumina"] if col in df.columns]
 
         c1, c2 = st.columns(2)
-
         with c1:
             st.write("**🧪 Variables originales (óxidos)**")
             st.write(oxidos)
@@ -164,11 +161,8 @@ if uploaded_file:
             st.write("**⚙️ Variables calculadas**")
             st.write(calculadas)
 
-        # =========================
-        # 4. FÓRMULAS Y CONCEPTOS
-        # =========================
+        # 3. Fórmulas
         st.subheader("📐 Fórmulas y conceptos clave")
-
         st.markdown("""
 **Alcalinidad total (Alkalis)**  
 **Fórmula:** `Na₂O + K₂O`  
@@ -187,9 +181,7 @@ if uploaded_file:
 **Concepto:** idealmente debe aproximarse a 100%; sirve para QA/QC.
         """)
 
-        # =========================
-        # 5. QA/QC Y RESALTADO
-        # =========================
+        # 4. QA/QC
         st.subheader("🚨 Control de calidad (QA/QC)")
 
         df_qc = build_qc_table(df)
@@ -218,9 +210,7 @@ if uploaded_file:
             st.success(f"✔ Filas conservadas después de QA/QC: {len(df_clean_qc)}")
             st.dataframe(df_clean_qc, use_container_width=True, height=500)
 
-        # =========================
-        # 6. REAGRUPACIÓN LITOLÓGICA
-        # =========================
+        # 5. Reagrupación litológica
         st.subheader("🪨 Reagrupación litológica")
 
         cols_litologia = [
@@ -235,11 +225,7 @@ if uploaded_file:
         cols_existentes = [col for col in cols_litologia if col in df.columns]
 
         if cols_existentes:
-            st.dataframe(
-                df[cols_existentes],
-                use_container_width=True,
-                height=400
-            )
+            st.dataframe(df[cols_existentes], use_container_width=True, height=400)
         else:
             st.warning("No se encontraron columnas de reagrupación litológica.")
 
@@ -247,64 +233,44 @@ if uploaded_file:
 
         with col1:
             st.write("**Roca base**")
-            st.dataframe(
-                df["rock_base"].value_counts().reset_index(),
-                use_container_width=True,
-                height=350
-            )
-
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            st.write("**Roca base**")
             if "rock_base" in df.columns:
-                st.dataframe(
-                    df["rock_base"].value_counts().reset_index(),
-                    use_container_width=True,
-                    height=350
-                )
+                st.dataframe(resumen_columna(df, "rock_base"), use_container_width=True, height=350)
             else:
                 st.info("Columna rock_base no disponible")
 
         with col2:
             st.write("**Contexto litológico**")
             if "rock_context" in df.columns:
-                st.dataframe(
-                    df["rock_context"].value_counts().reset_index(),
-                    use_container_width=True,
-                    height=350
-                )
+                st.dataframe(resumen_columna(df, "rock_context"), use_container_width=True, height=350)
             else:
                 st.info("Columna rock_context no disponible")
 
         with col3:
             st.write("**Grupo litológico**")
             if "rock_group" in df.columns:
-                st.dataframe(
-                    df["rock_group"].value_counts().reset_index(),
-                    use_container_width=True,
-                    height=350
-                )
+                st.dataframe(resumen_columna(df, "rock_group"), use_container_width=True, height=350)
             else:
                 st.info("Columna rock_group no disponible")
 
-        # =========================
-        # 7. ESTADÍSTICAS
-        # =========================
+        st.subheader("📊 Distribución de grupos litológicos")
+        if "rock_group" in df.columns:
+            st.pyplot(bar_plot_rock_group(df))
+        else:
+            st.warning("No se puede graficar rock_group")
+
+        # 6. Estadísticas
         st.subheader("📊 Estadísticas descriptivas")
         st.dataframe(descriptive_stats(df), use_container_width=True)
 
-        # =========================
-        # 8. CORRELACIÓN
-        # =========================
+        # 7. Correlación
         st.subheader("🔗 Matriz de correlación")
         corr = correlation_analysis(df)
         st.dataframe(corr, use_container_width=True)
 
+        st.subheader("🔥 Correlaciones fuertes")
+        st.dataframe(strong_correlations(corr), use_container_width=True)
 
-        # =========================
-        # 9. GRÁFICOS
-        # =========================
+        # 8. Gráficos
         st.subheader("📈 Gráficos geoquímicos")
         st.pyplot(scatter_plot(df))
         st.pyplot(bar_plot(df))
@@ -314,16 +280,12 @@ if uploaded_file:
         st.subheader("🪨 Distribución por grupo litológico")
         st.pyplot(bar_plot_rock_group(df))
 
-        # =========================
-        # 10. GEOESPACIAL
-        # =========================
+        # 9. Geoespacial
         if "long" in df.columns and "lat" in df.columns:
             st.subheader("🌍 Ubicación de muestras")
             st.pyplot(plot_locations(df))
 
-        # =========================
-        # 11. VARIABLES GEOQUÍMICAS EXTRA
-        # =========================
+        # 10. Variables extra
         if "tipo_alumina" in df.columns:
             st.subheader("🧪 Saturación de alúmina")
             st.dataframe(

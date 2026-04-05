@@ -7,9 +7,12 @@ Este proyecto desarrolla un análisis geoquímico utilizando **Python y Pandas**
 ## 🚀 Funcionalidades
 
 - 🧹 Limpieza de datos geoquímicos  
+- ✅ Control de calidad QA/QC  
 - 📊 Análisis estadístico  
 - 🔗 Matriz de correlación  
+- 🔥 Tabla de correlaciones fuertes  
 - 📈 Visualización de datos  
+- 🪨 Reagrupación litológica  
 - 🌍 Análisis geoespacial  
 - 💻 Aplicación web interactiva con Streamlit  
 
@@ -22,6 +25,7 @@ Este proyecto desarrolla un análisis geoquímico utilizando **Python y Pandas**
 - 📊 Matplotlib  
 - 🎨 Seaborn  
 - 🌐 Streamlit  
+- 🔢 NumPy  
 
 ---
 
@@ -36,7 +40,7 @@ Embajador CODEa UNI 2026
 ## 📊 Proyecto
 
 **Proyecto Final 2:** Procesamiento de datos con Pandas en minería  
- **Especialidad:** Ingeniería Geológica  
+**Especialidad:** Ingeniería Geológica  
 
 ---
 
@@ -46,7 +50,6 @@ Embajador CODEa UNI 2026
 
 ```bash
 python main.py
-
 
 
 
