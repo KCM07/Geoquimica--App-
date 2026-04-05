@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import pandas as pd
 
 plt.rcParams.update({
     "figure.figsize": (7, 4.5),
@@ -72,7 +73,7 @@ def tas_plot(df, color_col="rock_group"):
         ax=ax
     )
 
-    # Límites simplificados TAS
+    # Límites TAS simplificados
     ax.axvline(45, color="gray", linestyle="--", linewidth=0.8)
     ax.axvline(52, color="gray", linestyle="--", linewidth=0.8)
     ax.axvline(57, color="gray", linestyle="--", linewidth=0.8)
@@ -116,7 +117,6 @@ def harker_plot(df, y_col, color_col="rock_group"):
         ax=ax
     )
 
-    # línea de tendencia global
     sns.regplot(
         data=df,
         x="SiO2n",
@@ -273,7 +273,6 @@ def qq_style_plot(df, col):
 
 
 def magmatic_series_plot(df, color_col="rock_group"):
-    # aproximación simple: Fe/Mg vs SiO2
     if "SiO2n" not in df.columns or "Fe_Mg_ratio" not in df.columns:
         return None
 
@@ -323,5 +322,51 @@ def bar_plot_rock_group(df):
     ax.set_title("Distribución por grupo litológico")
     ax.set_ylabel("Frecuencia")
     plt.xticks(rotation=25, ha="right")
+    plt.tight_layout()
+    return fig
+
+
+def group_mean_plot(df):
+    if "rock_group" not in df.columns:
+        return None
+
+    cols = ["SiO2n", "TiO2n", "Al2O3n", "MgOn"]
+    cols = [c for c in cols if c in df.columns]
+
+    if not cols:
+        return None
+
+    tabla = df.groupby("rock_group")[cols].mean(numeric_only=True)
+
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    tabla.plot(kind="bar", ax=ax)
+    ax.set_title("Promedios por grupo litológico")
+    ax.set_ylabel("Concentración (%)")
+    plt.xticks(rotation=20, ha="right")
+    plt.tight_layout()
+    return fig
+
+
+def oxide_balance_histogram(df):
+    if "total_oxidos" not in df.columns:
+        return None
+
+    fig, ax = plt.subplots(figsize=(7, 4))
+
+    sns.histplot(
+        data=df,
+        x="total_oxidos",
+        bins=30,
+        kde=True,
+        color="darkorange",
+        ax=ax
+    )
+
+    ax.axvline(95, color="red", linestyle="--", linewidth=1)
+    ax.axvline(105, color="red", linestyle="--", linewidth=1)
+
+    ax.set_title("Balance de óxidos")
+    ax.set_xlabel("Suma de óxidos (%)")
+    ax.set_ylabel("Frecuencia")
     plt.tight_layout()
     return fig
