@@ -34,60 +34,60 @@ st.title("⛏️ Análisis Geoquímico de Rocas Ígneas")
 uploaded_file = st.file_uploader("Sube tu archivo CSV", type=["csv"])
 
 
-def build_qc_table(df: pd.DataFrame) -> pd.DataFrame:
-    df_qc = df.copy()
+def build_qc_table(dataframe: pd.DataFrame) -> pd.DataFrame:
+    qc_table = dataframe.copy()
 
-    oxidos = [
+    oxide_columns = [
         "SiO2n", "TiO2n", "Al2O3n", "FeO*n", "MnOn",
         "MgOn", "CaOn", "Na2On", "K2On", "P2O5n"
     ]
 
-    for col in oxidos:
-        if col not in df_qc.columns:
-            df_qc[col] = pd.NA
+    for column in oxide_columns:
+        if column not in qc_table.columns:
+            qc_table[column] = pd.NA
 
-    df_qc["QC_flag"] = ""
+    qc_table["QC_flag"] = ""
 
-    oxidos_presentes = [col for col in oxidos if col in df_qc.columns]
-    df_qc["total_oxidos"] = df_qc[oxidos_presentes].sum(axis=1, skipna=True)
+    present_oxides = [column for column in oxide_columns if column in qc_table.columns]
+    qc_table["total_oxidos"] = qc_table[present_oxides].sum(axis=1, skipna=True)
 
-    df_qc.loc[
-        (df_qc["total_oxidos"] < 95) | (df_qc["total_oxidos"] > 105),
+    qc_table.loc[
+        (qc_table["total_oxidos"] < 95) | (qc_table["total_oxidos"] > 105),
         "QC_flag"
     ] += "Balance de óxidos fuera de rango; "
 
-    if "SiO2n" in df_qc.columns:
-        df_qc.loc[
-            (df_qc["SiO2n"] < 30) | (df_qc["SiO2n"] > 80),
+    if "SiO2n" in qc_table.columns:
+        qc_table.loc[
+            (qc_table["SiO2n"] < 30) | (qc_table["SiO2n"] > 80),
             "QC_flag"
         ] += "SiO2 fuera de rango; "
 
-    if "TiO2n" in df_qc.columns:
-        df_qc.loc[
-            (df_qc["TiO2n"] < 0) | (df_qc["TiO2n"] > 6),
+    if "TiO2n" in qc_table.columns:
+        qc_table.loc[
+            (qc_table["TiO2n"] < 0) | (qc_table["TiO2n"] > 6),
             "QC_flag"
         ] += "TiO2 fuera de rango; "
 
-    if "Al2O3n" in df_qc.columns:
-        df_qc.loc[
-            (df_qc["Al2O3n"] < 0) | (df_qc["Al2O3n"] > 30),
+    if "Al2O3n" in qc_table.columns:
+        qc_table.loc[
+            (qc_table["Al2O3n"] < 0) | (qc_table["Al2O3n"] > 30),
             "QC_flag"
         ] += "Al2O3 fuera de rango; "
 
-    if "MgOn" in df_qc.columns:
-        df_qc.loc[
-            (df_qc["MgOn"] < 0) | (df_qc["MgOn"] > 25),
+    if "MgOn" in qc_table.columns:
+        qc_table.loc[
+            (qc_table["MgOn"] < 0) | (qc_table["MgOn"] > 25),
             "QC_flag"
         ] += "MgO fuera de rango; "
 
-    principales = ["rock_name", "SiO2n", "Al2O3n", "FeO*n", "MgOn"]
-    existentes = [c for c in principales if c in df_qc.columns]
-    if existentes:
-        mask_nulos = df_qc[existentes].isnull().any(axis=1)
-        df_qc.loc[mask_nulos, "QC_flag"] += "Valores nulos en campos clave; "
+    key_columns = ["rock_name", "SiO2n", "Al2O3n", "FeO*n", "MgOn"]
+    existing_key_columns = [column for column in key_columns if column in qc_table.columns]
 
-    return df_qc
+    if existing_key_columns:
+        null_mask = qc_table[existing_key_columns].isnull().any(axis=1)
+        qc_table.loc[null_mask, "QC_flag"] += "Valores nulos en campos clave; "
 
+    return qc_table
 
 def highlight_qc(row):
     if "QC_flag" in row and isinstance(row["QC_flag"], str) and row["QC_flag"].strip() != "":
@@ -95,12 +95,11 @@ def highlight_qc(row):
     return [""] * len(row)
 
 
-def resumen_columna(df: pd.DataFrame, col: str) -> pd.DataFrame:
-    conteo = df[col].value_counts().reset_index()
+def resumen_columna(dataframe: pd.DataFrame, col: str) -> pd.DataFrame:
+    conteo = dataframe[col].value_counts().reset_index()
     conteo.columns = [col, "frecuencia"]
-    conteo["porcentaje (%)"] = (conteo["frecuencia"] / len(df) * 100).round(2)
+    conteo["porcentaje (%)"] = (conteo["frecuencia"] / len(dataframe) * 100).round(2)
     return conteo
-
 
 if uploaded_file:
     df = load_data(uploaded_file)
