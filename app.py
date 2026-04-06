@@ -29,10 +29,15 @@ from modules.rock_name_processing import process_rock_names
 
 st.set_page_config(page_title="Análisis Geoquímico", layout="wide")
 
-col1, col2 = st.columns([1, 10])
+col1, col2 = st.columns([2, 10])
 
 with col1:
-    st.image("assets/Logo_.png", width=2000)
+    st.markdown(
+        """
+        <img src="assets/Logo_.png" width="150">
+        """,
+        unsafe_allow_html=True
+    )
 
 with col2:
     st.markdown(
