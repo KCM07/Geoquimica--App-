@@ -3,7 +3,7 @@
 # ================================
 
 # ================================
-# 📦 IMPORTACIÓN DE MÓDULOS
+# IMPORTACIÓN DE MÓDULOS
 # Cada módulo contiene una etapa del flujo geoquímico:
 # - loader: lectura de datos
 # - cleaning: limpieza y estandarización
@@ -44,7 +44,7 @@ from modules.rock_name_processing import process_rock_names
 def qa_qc_report(df):
 
     """
-    🚨 REPORTE QA/QC (Calidad de datos geoquímicos)
+     REPORTE QA/QC (Calidad de datos geoquímicos)
 
     Esta función realiza una revisión inicial del dataset:
     - Dimensiones del conjunto de datos
@@ -75,7 +75,7 @@ def qa_qc_report(df):
     ]
 
     if all(col in df.columns for col in oxidos):
-        # 🔢 Cálculo del balance total de óxidos mayores
+        #  Cálculo del balance total de óxidos mayores
         # En análisis geoquímico, la suma ideal debe aproximarse a 100 %
 
         df["total_oxidos"] = df[oxidos].sum(axis=1)
