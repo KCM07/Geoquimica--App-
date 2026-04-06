@@ -29,7 +29,16 @@ from modules.rock_name_processing import process_rock_names
 
 st.set_page_config(page_title="Análisis Geoquímico", layout="wide")
 
-st.title("⛏️ Análisis Geoquímico de Rocas Ígneas")
+col1, col2 = st.columns([1, 10])
+
+with col1:
+    st.image("D:\2026_KEM\CODEA 2026\Proyecto 2_ CODEa UNI\assets\Logo_.png", width=80)
+
+with col2:
+    st.markdown(
+        "<h1 style='margin:0;'>⛏️ Análisis Geoquímico de Rocas Ígneas</h1>",
+        unsafe_allow_html=True
+    )
 
 uploaded_file = st.file_uploader("Sube tu archivo CSV", type=["csv"])
 
