@@ -32,7 +32,7 @@ st.set_page_config(page_title="Análisis Geoquímico", layout="wide")
 col1, col2 = st.columns([1, 10])
 
 with col1:
-    st.image("D:\2026_KEM\CODEA 2026\Proyecto 2_ CODEa UNI\assets\Logo_.png", width=80)
+    st.image("assets/Logo_.png", width=80)
 
 with col2:
     st.markdown(
