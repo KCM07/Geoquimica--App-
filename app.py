@@ -2,17 +2,23 @@
 #  APLICACIÓN STREAMLIT – ANÁLISIS GEOQUÍMICO DE ROCAS ÍGNEAS
 # ============================================================
 
-#  IMPORTACIÓN DE LIBRERÍAS BASE
+# =========================
+# IMPORTACIÓN DE LIBRERÍAS
+# =========================
+import base64
 import streamlit as st
 import pandas as pd
-#  IMPORTACIÓN DE MÓDULOS DEL PROYECTO
-from modules.loader import load_data                      # 📂 Carga de datos
-from modules.cleaning import clean_data                   # 🧹 Limpieza
+
+# =========================
+# IMPORTACIÓN DE MÓDULOS
+# =========================
+from modules.loader import load_data
+from modules.cleaning import clean_data
 from modules.analysis import (
-    descriptive_stats,                                    # 📊 Estadística
-    correlation_analysis,                                 # 🔗 Correlación
-    add_geochemical_variables,                            # 🧪 Variables calculadas
-    strong_correlations                                   # 🔥 Correlaciones fuertes
+    descriptive_stats,
+    correlation_analysis,
+    add_geochemical_variables,
+    strong_correlations
 )
 from modules.visualization import (
     scatter_plot,
@@ -29,47 +35,119 @@ from modules.visualization import (
     group_mean_plot,
     oxide_balance_histogram
 )
-from modules.geospatial import plot_locations               # Visualización espacial
-from modules.rock_name_processing import process_rock_names # Normalización litológica
-# ============================================================
-#  CONFIGURACIÓN GENERAL STREAMLIT
-# ============================================================
+from modules.geospatial import plot_locations
+from modules.rock_name_processing import process_rock_names
 
+
+# ============================================================
+# CONFIGURACIÓN GENERAL
+# ============================================================
 st.set_page_config(page_title="Análisis Geoquímico", layout="wide")
-# ============================================================
-#  FUNCIÓN PARA CARGAR IMÁGENES EN BASE64
-# ============================================================
 
-import base64
 
-def get_base64_image(path):
-    """Convierte una imagen a base64 para incrustarla en HTML."""
+# ============================================================
+# FUNCIÓN PARA CARGAR IMÁGENES EN BASE64
+# ============================================================
+def get_base64_image(path: str) -> str:
     with open(path, "rb") as img:
         return base64.b64encode(img.read()).decode()
-# Carga del logo
+
+
+# ============================================================
+# LOGO / ENCABEZADO
+# ============================================================
 img_base64 = get_base64_image("assets/Logo_.png")
-# Inserción del logo usando HTML
+
 st.markdown(
-    f'<img src="data:image/png;base64,{img_base64}" width="750">',
+    f"""
+    <div style="display:flex; align-items:center; gap:18px; margin-bottom:10px;">
+        <img src="data:image/png;base64,{img_base64}" width="220">
+        <h1 style="margin:0;">⛏️ ANÁLISIS GEOQUÍMICO DE ROCAS ÍGNEAS</h1>
+    </div>
+    """,
     unsafe_allow_html=True
 )
 
-# =========================
-# ENCABEZADO PRINCIPAL
-# ========================
-
-# Carga de archivo CSV por el usuario
-st.subheader("⛏️ ANÁLISIS GEOQUÍMICO DE ROCAS ÍGNEAS")
 uploaded_file = st.file_uploader("Sube tu archivo CSV", type=["csv"])
 
 
+# ============================================================
+# FUNCIÓN QA/QC
+# ============================================================
+def build_qc_table(dataframe: pd.DataFrame) -> pd.DataFrame:
+    """
+    Aplica reglas básicas de control de calidad geoquímico:
+    - Balance de óxidos
+    - Rangos aceptables
+    - Valores nulos críticos
+    """
+    qc_table = dataframe.copy()
+
+    oxide_columns = [
+        "SiO2n", "TiO2n", "Al2O3n", "FeO*n", "MnOn",
+        "MgOn", "CaOn", "Na2On", "K2On", "P2O5n"
+    ]
+
+    for column in oxide_columns:
+        if column not in qc_table.columns:
+            qc_table[column] = pd.NA
+
+    qc_table["QC_flag"] = ""
+
+    present_oxides = [column for column in oxide_columns if column in qc_table.columns]
+    qc_table["total_oxidos"] = qc_table[present_oxides].sum(axis=1, skipna=True)
+
+    qc_table.loc[
+        (qc_table["total_oxidos"] < 95) | (qc_table["total_oxidos"] > 105),
+        "QC_flag"
+    ] += "Balance de óxidos fuera de rango; "
+
+    if "SiO2n" in qc_table.columns:
+        qc_table.loc[
+            (qc_table["SiO2n"] < 30) | (qc_table["SiO2n"] > 80),
+            "QC_flag"
+        ] += "SiO2 fuera de rango; "
+
+    if "TiO2n" in qc_table.columns:
+        qc_table.loc[
+            (qc_table["TiO2n"] < 0) | (qc_table["TiO2n"] > 6),
+            "QC_flag"
+        ] += "TiO2 fuera de rango; "
+
+    if "Al2O3n" in qc_table.columns:
+        qc_table.loc[
+            (qc_table["Al2O3n"] < 0) | (qc_table["Al2O3n"] > 30),
+            "QC_flag"
+        ] += "Al2O3 fuera de rango; "
+
+    if "MgOn" in qc_table.columns:
+        qc_table.loc[
+            (qc_table["MgOn"] < 0) | (qc_table["MgOn"] > 25),
+            "QC_flag"
+        ] += "MgO fuera de rango; "
+
+    key_columns = ["rock_name", "SiO2n", "Al2O3n", "FeO*n", "MgOn"]
+    existing_key_columns = [column for column in key_columns if column in qc_table.columns]
+
+    if existing_key_columns:
+        null_mask = qc_table[existing_key_columns].isnull().any(axis=1)
+        qc_table.loc[null_mask, "QC_flag"] += "Valores nulos en campos clave; "
+
+    return qc_table
 
 
-# ==============================
+# ============================================================
+# FUNCIÓN RESALTADO QA/QC
+# ============================================================
+def highlight_qc(row):
+    if "QC_flag" in row and isinstance(row["QC_flag"], str) and row["QC_flag"].strip() != "":
+        return ["background-color: #ffdddd"] * len(row)
+    return [""] * len(row)
+
+
+# ============================================================
 # FUNCIÓN RESUMEN DE CATEGORÍAS
-# =============================
-
-
+# ============================================================
 def resumen_columna(dataframe: pd.DataFrame, col: str) -> pd.DataFrame:
     conteo = dataframe[col].value_counts().reset_index()
     conteo.columns = [col, "frecuencia"]
@@ -78,122 +156,41 @@ def resumen_columna(dataframe: pd.DataFrame, col: str) -> pd.DataFrame:
 
 
 # ============================================================
-# 🚀 FLUJO PRINCIPAL DE LA APP
+# FLUJO PRINCIPAL
 # ============================================================
-
 if uploaded_file:
-    df = load_data(uploaded_file)
+    raw_df = load_data(uploaded_file)
 
-    if df is not None:
+    if raw_df is not None:
         # =========================
         # 1. CARGA, LIMPIEZA Y PROCESAMIENTO
         # =========================
-        df = clean_data(df)
-        df = add_geochemical_variables(df)
-        df = process_rock_names(df)
+        processed_df = clean_data(raw_df)
+        processed_df = add_geochemical_variables(processed_df)
+        processed_df = process_rock_names(processed_df)
 
-
-        # =========================
-        # FUNCIÓN QA/QC
-        # Construye una tabla con banderas de control de calidad
-        # =========================
-
-        def build_qc_table(dataframe: pd.DataFrame) -> pd.DataFrame:
-
-            """
-            Aplica reglas básicas de control de calidad geoquímico:
-            - Balance de óxidos
-            - Rangos aceptables
-            - Valores nulos críticos
-            """
-
-            qc_table = dataframe.copy()
-
-            oxide_columns = [
-                "SiO2n", "TiO2n", "Al2O3n", "FeO*n", "MnOn",
-                "MgOn", "CaOn", "Na2On", "K2On", "P2O5n"
-            ]
-            # Asegura que todas las columnas existan
-            for column in oxide_columns:
-                if column not in qc_table.columns:
-                    qc_table[column] = pd.NA
-
-            # Cálculo del balance total de óxidos
-            qc_table["QC_flag"] = ""
-
-            present_oxides = [column for column in oxide_columns if column in qc_table.columns]
-            qc_table["total_oxidos"] = qc_table[present_oxides].sum(axis=1, skipna=True)
-            # Regla: balance fuera de 100 ±5 %
-            qc_table.loc[
-                (qc_table["total_oxidos"] < 95) | (qc_table["total_oxidos"] > 105),
-                "QC_flag"
-            ] += "Balance de óxidos fuera de rango; "
-
-            # Validaciones individuales (ejemplo)
-            if "SiO2n" in qc_table.columns:
-                qc_table.loc[
-                    (qc_table["SiO2n"] < 30) | (qc_table["SiO2n"] > 80),
-                    "QC_flag"
-                ] += "SiO2 fuera de rango; "
-
-            if "TiO2n" in qc_table.columns:
-                qc_table.loc[
-                    (qc_table["TiO2n"] < 0) | (qc_table["TiO2n"] > 6),
-                    "QC_flag"
-                ] += "TiO2 fuera de rango; "
-
-            if "Al2O3n" in qc_table.columns:
-                qc_table.loc[
-                    (qc_table["Al2O3n"] < 0) | (qc_table["Al2O3n"] > 30),
-                    "QC_flag"
-                ] += "Al2O3 fuera de rango; "
-
-            if "MgOn" in qc_table.columns:
-                qc_table.loc[
-                    (qc_table["MgOn"] < 0) | (qc_table["MgOn"] > 25),
-                    "QC_flag"
-                ] += "MgO fuera de rango; "
-                # Chequeo de valores nulos en campos clave
-
-            key_columns = ["rock_name", "SiO2n", "Al2O3n", "FeO*n", "MgOn"]
-            existing_key_columns = [column for column in key_columns if column in qc_table.columns]
-
-            if existing_key_columns:
-                null_mask = qc_table[existing_key_columns].isnull().any(axis=1)
-                qc_table.loc[null_mask, "QC_flag"] += "Valores nulos en campos clave; "
-
-            return qc_table
-
-
-        # ======================================
-        # FUNCIÓN PARA RESALTAR ERRORES QA/QC
-        # =======================================
-
-        def highlight_qc(row):
-            if "QC_flag" in row and isinstance(row["QC_flag"], str) and row["QC_flag"].strip() != "":
-                return ["background-color: #ffdddd"] * len(row)
-            return [""] * len(row)
+        # Dataset completo para análisis generales
+        df_full = processed_df.copy()
 
         # =========================
         # 2. CONFIGURACIÓN DE GRÁFICOS
         # =========================
         st.sidebar.subheader("⚙️ Configuración de gráficos")
-
         ancho = st.sidebar.slider("📐 Ancho del gráfico", 5, 20, 10)
         alto = st.sidebar.slider("📏 Alto del gráfico", 3, 10, 5)
         tam_punto = st.sidebar.slider("🔵 Tamaño de puntos", 10, 100, 35)
-
         fig_size = (ancho, alto)
 
         # =========================
-        # 3. FILTROS
+        # 3. FILTROS SOLO PARA VISUALIZACIÓN
         # =========================
-        st.subheader("🎛️ Filtros")
+        st.subheader("🎛️ Filtros para visualización")
+        st.caption("Estos filtros afectan tablas exploratorias y gráficos, no el QA/QC ni las estadísticas globales.")
 
-        df_filtrado = df.copy()
+        df_filtrado = df_full.copy()
 
-        if "rock_group" in df.columns:
-            grupos = sorted(df["rock_group"].dropna().unique().tolist())
+        if "rock_group" in df_full.columns:
+            grupos = sorted(df_full["rock_group"].dropna().unique().tolist())
             grupos_sel = st.multiselect(
                 "Filtrar por rock_group",
                 grupos,
@@ -201,17 +198,15 @@ if uploaded_file:
             )
             df_filtrado = df_filtrado[df_filtrado["rock_group"].isin(grupos_sel)]
 
-        st.write(f"Filas después de filtros: {df_filtrado.shape[0]}")
+        st.write(f"Filas del dataset completo: {df_full.shape[0]}")
+        st.write(f"Filas después del filtro visual: {df_filtrado.shape[0]}")
 
         # =========================
-        # 4. VISUALIZACIÓN DE DATOS
+        # 4. VISUALIZACIÓN TABULAR
         # =========================
         st.subheader("📋 Visualización de los datos")
-        st.write(f"Filas totales cargadas: {df.shape[0]} | Columnas: {df.shape[1]}")
-        st.write(f"Filas visibles después del filtro: {df_filtrado.shape[0]}")
-
         modo = st.radio(
-            "Selecciona cómo quieres visualizar los datos:",
+            "Selecciona cómo quieres visualizar los datos filtrados:",
             ["Vista previa (50 filas)", "Elegir rango", "Ver todo"],
             index=0
         )
@@ -261,7 +256,7 @@ if uploaded_file:
 
         calculadas = [
             col for col in ["alkalis", "Fe_Mg_ratio", "A_CNK", "tipo_alumina"]
-            if col in df_filtrado.columns
+            if col in df_full.columns
         ]
 
         c1, c2 = st.columns(2)
@@ -278,7 +273,6 @@ if uploaded_file:
         # 6. FÓRMULAS Y CONCEPTOS
         # =========================
         st.subheader("📐 Fórmulas y conceptos clave")
-
         st.markdown("""
 **Alcalinidad total (Alkalis)**  
 **Fórmula:** `Na₂O + K₂O`  
@@ -298,21 +292,19 @@ if uploaded_file:
         """)
 
         # =========================
-        # 7. QA/QC
+        # 7. QA/QC GLOBAL
         # =========================
         st.subheader("🚨 Control de calidad (QA/QC)")
-
-        df_qc = build_qc_table(df)
+        df_qc = build_qc_table(df_full)
         df_error = df_qc[df_qc["QC_flag"].astype(str).str.strip() != ""]
 
         st.write(f"**Filas con inconsistencia:** {len(df_error)}")
 
         if len(df_error) > 0:
             st.write("**Resumen rápido de inconsistencias**")
-            st.dataframe(
-                df_error["QC_flag"].value_counts().reset_index(),
-                use_container_width=True
-            )
+            qc_resumen = df_error["QC_flag"].value_counts().reset_index()
+            qc_resumen.columns = ["tipo_inconsistencia", "frecuencia"]
+            st.dataframe(qc_resumen, use_container_width=True)
         else:
             st.success("✔ No se detectaron inconsistencias principales")
 
@@ -329,7 +321,23 @@ if uploaded_file:
             st.dataframe(df_clean_qc, use_container_width=True, height=500)
 
         # =========================
-        # 8. REAGRUPACIÓN LITOLÓGICA
+        # 8. ESTADÍSTICAS DESCRIPTIVAS GLOBALES
+        # =========================
+        st.subheader("📊 Estadísticas descriptivas")
+        st.dataframe(descriptive_stats(df_full), use_container_width=True)
+
+        # =========================
+        # 9. CORRELACIÓN GLOBAL
+        # =========================
+        st.subheader("🔗 Matriz de correlación")
+        corr = correlation_analysis(df_full)
+        st.dataframe(corr, use_container_width=True)
+
+        st.subheader("🔥 Correlaciones fuertes")
+        st.dataframe(strong_correlations(corr), use_container_width=True)
+
+        # =========================
+        # 10. REAGRUPACIÓN LITOLÓGICA
         # =========================
         st.subheader("🪨 Reagrupación litológica")
 
@@ -342,10 +350,10 @@ if uploaded_file:
             "rock_group"
         ]
 
-        cols_existentes = [col for col in cols_litologia if col in df_filtrado.columns]
+        cols_existentes = [col for col in cols_litologia if col in df_full.columns]
 
         if cols_existentes:
-            st.dataframe(df_filtrado[cols_existentes], use_container_width=True, height=400)
+            st.dataframe(df_full[cols_existentes], use_container_width=True, height=400)
         else:
             st.warning("No se encontraron columnas de reagrupación litológica.")
 
@@ -353,9 +361,9 @@ if uploaded_file:
 
         with col1:
             st.write("**Roca base**")
-            if "rock_base" in df_filtrado.columns:
+            if "rock_base" in df_full.columns:
                 st.dataframe(
-                    resumen_columna(df_filtrado, "rock_base"),
+                    resumen_columna(df_full, "rock_base"),
                     use_container_width=True,
                     height=350
                 )
@@ -364,9 +372,9 @@ if uploaded_file:
 
         with col2:
             st.write("**Contexto litológico**")
-            if "rock_context" in df_filtrado.columns:
+            if "rock_context" in df_full.columns:
                 st.dataframe(
-                    resumen_columna(df_filtrado, "rock_context"),
+                    resumen_columna(df_full, "rock_context"),
                     use_container_width=True,
                     height=350
                 )
@@ -375,40 +383,25 @@ if uploaded_file:
 
         with col3:
             st.write("**Grupo litológico**")
-            if "rock_group" in df_filtrado.columns:
+            if "rock_group" in df_full.columns:
                 st.dataframe(
-                    resumen_columna(df_filtrado, "rock_group"),
+                    resumen_columna(df_full, "rock_group"),
                     use_container_width=True,
                     height=350
                 )
             else:
                 st.info("Columna rock_group no disponible")
 
-        st.subheader("📊 Distribución de grupos litológicos")
-        fig_group_dist = bar_plot_rock_group(df_filtrado, size=fig_size)
+        st.subheader("📊 Distribución global de grupos litológicos")
+        fig_group_dist = bar_plot_rock_group(df_full, size=fig_size)
         if fig_group_dist is not None:
             st.pyplot(fig_group_dist)
 
         # =========================
-        # 9. ESTADÍSTICAS
-        # =========================
-        st.subheader("📊 Estadísticas descriptivas")
-        st.dataframe(descriptive_stats(df_filtrado), use_container_width=True)
-
-        # =========================
-        # 10. CORRELACIÓN
-        # =========================
-        st.subheader("🔗 Matriz de correlación")
-        corr = correlation_analysis(df_filtrado)
-        st.dataframe(corr, use_container_width=True)
-
-        st.subheader("🔥 Correlaciones fuertes")
-        st.dataframe(strong_correlations(corr), use_container_width=True)
-
-        # =========================
-        # 11. GRÁFICOS SELECCIONABLES
+        # 11. EDA Y GRÁFICOS FILTRADOS
         # =========================
         st.subheader("📈 Exploración gráfica")
+        st.caption("Los gráficos de esta sección usan el dataset filtrado.")
 
         opciones_graficos = [
             "Scatter SiO2 vs TiO2",
@@ -429,7 +422,7 @@ if uploaded_file:
         graficos_sel = st.multiselect(
             "Selecciona los gráficos a mostrar:",
             opciones_graficos,
-            default=["Scatter SiO2 vs TiO2", "Diagrama TAS", "Heatmap de correlación"]
+            default=["Histograma", "Boxplot por grupo", "Diagrama TAS"]
         )
 
         if "Scatter SiO2 vs TiO2" in graficos_sel:
@@ -481,12 +474,13 @@ if uploaded_file:
                     st.pyplot(fig)
 
         if "Heatmap de correlación" in graficos_sel:
-            fig = correlation_heatmap(corr, size=fig_size)
+            fig = correlation_heatmap(correlation_analysis(df_filtrado), size=fig_size)
             if fig is not None:
                 st.pyplot(fig)
 
         if "Barras de correlaciones fuertes" in graficos_sel:
-            fig = strong_corr_barplot(corr, top_n=10, size=fig_size)
+            corr_filtrado = correlation_analysis(df_filtrado)
+            fig = strong_corr_barplot(corr_filtrado, top_n=10, size=fig_size)
             if fig is not None:
                 st.pyplot(fig)
 
@@ -547,18 +541,19 @@ if uploaded_file:
                     st.pyplot(fig)
 
         # =========================
-        # 12. GEOESPACIAL
+        # 12. GEOESPACIAL FILTRADO
         # =========================
         if "long" in df_filtrado.columns and "lat" in df_filtrado.columns:
             st.subheader("🌍 Ubicación de muestras")
-            st.pyplot(plot_locations(df_filtrado, size=fig_size, point_size=tam_punto))
+            fig_map = plot_locations(df_filtrado, size=fig_size, point_size=tam_punto)
+            if fig_map is not None:
+                st.pyplot(fig_map)
 
         # =========================
         # 13. VARIABLES EXTRA
         # =========================
-        if "tipo_alumina" in df_filtrado.columns:
+        if "tipo_alumina" in df_full.columns:
             st.subheader("🧪 Saturación de alúmina")
-            st.dataframe(
-                df_filtrado["tipo_alumina"].value_counts().reset_index(),
-                use_container_width=True
-            )
+            alumina_resumen = df_full["tipo_alumina"].value_counts().reset_index()
+            alumina_resumen.columns = ["tipo_alumina", "frecuencia"]
+            st.dataframe(alumina_resumen, use_container_width=True)
