@@ -38,7 +38,7 @@ def get_base64_image(path):
 img_base64 = get_base64_image("assets/Logo_.png")
 
 st.markdown(
-    f'<img src="data:image/png;base64,{img_base64}" width="450">',
+    f'<img src="data:image/png;base64,{img_base64}" width="750">',
     unsafe_allow_html=True
 )
 
