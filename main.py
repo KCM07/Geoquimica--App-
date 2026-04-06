@@ -2,6 +2,18 @@
 # PROYECTO GEOQUÍMICO - PYTHON
 # ================================
 
+# ================================
+# 📦 IMPORTACIÓN DE MÓDULOS
+# Cada módulo contiene una etapa del flujo geoquímico:
+# - loader: lectura de datos
+# - cleaning: limpieza y estandarización
+# - analysis: cálculos geoquímicos y estadísticos
+# - visualization: generación de gráficos
+# - geospatial: análisis espacial
+# - rock_name_processing: normalización litológica
+# ================================
+
+
 from modules.loader import load_data
 from modules.cleaning import clean_data
 from modules.analysis import (
@@ -30,6 +42,20 @@ from modules.rock_name_processing import process_rock_names
 
 
 def qa_qc_report(df):
+
+    """
+    🚨 REPORTE QA/QC (Calidad de datos geoquímicos)
+
+    Esta función realiza una revisión inicial del dataset:
+    - Dimensiones del conjunto de datos
+    - Valores nulos por columna
+    - Filas duplicadas
+    - Balance de óxidos mayores
+    - Validación de rangos geoquímicos razonables
+
+    No modifica los datos, solo genera diagnóstico.
+    """
+
     print("\n" + "=" * 60)
     print("QA/QC - REPORTE DE CALIDAD DE DATOS")
     print("=" * 60)
@@ -49,6 +75,9 @@ def qa_qc_report(df):
     ]
 
     if all(col in df.columns for col in oxidos):
+        # 🔢 Cálculo del balance total de óxidos mayores
+        # En análisis geoquímico, la suma ideal debe aproximarse a 100 %
+
         df["total_oxidos"] = df[oxidos].sum(axis=1)
         print("\nBalance de óxidos:")
         print(df["total_oxidos"].describe())
@@ -74,6 +103,19 @@ def qa_qc_report(df):
 
 
 def print_lithology_summary(df):
+    """
+       RESUMEN LITOLÓGICO
+
+       Genera conteos de:
+       - roca base
+       - contexto litológico
+       - grupo litológico
+       - observaciones
+
+       Permite validar la reagrupación litológica
+       y evaluar representatividad de muestras.
+       """
+
     print("\n" + "=" * 60)
     print("RESUMEN LITOLÓGICO REAGRUPADO")
     print("=" * 60)
@@ -98,6 +140,7 @@ def print_lithology_summary(df):
 def main():
     # =========================
     # 1. CARGAR DATOS
+    # Se lee el archivo CSV principal del proyecto
     # =========================
     path = "data/2_Geology_dataset.csv"
     df = load_data(path)
@@ -108,27 +151,32 @@ def main():
 
     # =========================
     # 2. QA/QC INICIAL
+    # Diagnóstico de calidad antes de limpiar datos
     # =========================
     df = qa_qc_report(df)
 
     # =========================
     # 3. LIMPIEZA
+    # Normaliza formatos, elimina errores y prepara el dataset
     # =========================
     df = clean_data(df)
 
     # =========================
     # 4. VARIABLES GEOQUÍMICAS
+    # Se calculan índices usados en interpretación magmática
     # =========================
     df = add_geochemical_variables(df)
 
     # =========================
     # 5. REAGRUPACIÓN LITOLÓGICA
+    # Estandariza nombres de roca y agrupa por categoría
     # =========================
     if "rock_name" in df.columns:
         df = process_rock_names(df)
 
     # =========================
     # 6. ESTADÍSTICAS
+    # Media, mediana, desviación, min, max
     # =========================
     print("\n" + "=" * 60)
     print("ESTADÍSTICAS DESCRIPTIVAS")
@@ -137,6 +185,7 @@ def main():
 
     # =========================
     # 7. CORRELACIÓN
+    # Relaciones geoquímicas entre óxidos
     # =========================
     print("\n" + "=" * 60)
     print("MATRIZ DE CORRELACIÓN")
@@ -165,6 +214,14 @@ def main():
 
     # =========================
     # 10. GENERAR GRÁFICOS
+    # Visualización geoquímica clásica
+
+    #  Diagrama TAS: clasificación química de rocas ígneas
+    #  Diagramas de Harker: tendencias magmáticas
+    #  Heatmap: relaciones multivariantes
+    #  Series magmáticas: evolución composicional
+    #  Histogramas y QQ: distribución de datos
+
     # =========================
     print("\nGenerando gráficos...")
 
@@ -209,12 +266,19 @@ def main():
     if "total_oxidos" in df.columns:
         oxide_balance_histogram(df)
 
-    # Geoespacial
+    # =========================
+    # GEOESPACIAL
+    # Visualiza distribución espacial de muestras
+    # =========================
+
     if "long" in df.columns and "lat" in df.columns:
         plot_locations(df)
 
     print("✔ Proceso finalizado correctamente.")
 
+
+# Punto de entrada del programa
+# Garantiza ejecución controlada del flujo principal
 
 if __name__ == "__main__":
     main()
