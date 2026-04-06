@@ -63,86 +63,7 @@ st.subheader("⛏️ ANÁLISIS GEOQUÍMICO DE ROCAS ÍGNEAS")
 uploaded_file = st.file_uploader("Sube tu archivo CSV", type=["csv"])
 
 
-# =========================
-# FUNCIÓN QA/QC
-# Construye una tabla con banderas de control de calidad
-# =========================
 
-def build_qc_table(dataframe: pd.DataFrame) -> pd.DataFrame:
-
-    """
-    Aplica reglas básicas de control de calidad geoquímico:
-    - Balance de óxidos
-    - Rangos aceptables
-    - Valores nulos críticos
-    """
-
-    qc_table = dataframe.copy()
-
-    oxide_columns = [
-        "SiO2n", "TiO2n", "Al2O3n", "FeO*n", "MnOn",
-        "MgOn", "CaOn", "Na2On", "K2On", "P2O5n"
-    ]
-    # Asegura que todas las columnas existan
-    for column in oxide_columns:
-        if column not in qc_table.columns:
-            qc_table[column] = pd.NA
-
-    # Cálculo del balance total de óxidos
-    qc_table["QC_flag"] = ""
-
-    present_oxides = [column for column in oxide_columns if column in qc_table.columns]
-    qc_table["total_oxidos"] = qc_table[present_oxides].sum(axis=1, skipna=True)
-    # Regla: balance fuera de 100 ±5 %
-    qc_table.loc[
-        (qc_table["total_oxidos"] < 95) | (qc_table["total_oxidos"] > 105),
-        "QC_flag"
-    ] += "Balance de óxidos fuera de rango; "
-
-    # Validaciones individuales (ejemplo)
-    if "SiO2n" in qc_table.columns:
-        qc_table.loc[
-            (qc_table["SiO2n"] < 30) | (qc_table["SiO2n"] > 80),
-            "QC_flag"
-        ] += "SiO2 fuera de rango; "
-
-    if "TiO2n" in qc_table.columns:
-        qc_table.loc[
-            (qc_table["TiO2n"] < 0) | (qc_table["TiO2n"] > 6),
-            "QC_flag"
-        ] += "TiO2 fuera de rango; "
-
-    if "Al2O3n" in qc_table.columns:
-        qc_table.loc[
-            (qc_table["Al2O3n"] < 0) | (qc_table["Al2O3n"] > 30),
-            "QC_flag"
-        ] += "Al2O3 fuera de rango; "
-
-    if "MgOn" in qc_table.columns:
-        qc_table.loc[
-            (qc_table["MgOn"] < 0) | (qc_table["MgOn"] > 25),
-            "QC_flag"
-        ] += "MgO fuera de rango; "
-        # Chequeo de valores nulos en campos clave
-
-    key_columns = ["rock_name", "SiO2n", "Al2O3n", "FeO*n", "MgOn"]
-    existing_key_columns = [column for column in key_columns if column in qc_table.columns]
-
-    if existing_key_columns:
-        null_mask = qc_table[existing_key_columns].isnull().any(axis=1)
-        qc_table.loc[null_mask, "QC_flag"] += "Valores nulos en campos clave; "
-
-    return qc_table
-
-# ======================================
-# FUNCIÓN PARA RESALTAR ERRORES QA/QC
-# =======================================
-
-
-def highlight_qc(row):
-    if "QC_flag" in row and isinstance(row["QC_flag"], str) and row["QC_flag"].strip() != "":
-        return ["background-color: #ffdddd"] * len(row)
-    return [""] * len(row)
 
 # ==============================
 # FUNCIÓN RESUMEN DE CATEGORÍAS
@@ -170,6 +91,88 @@ if uploaded_file:
         df = clean_data(df)
         df = add_geochemical_variables(df)
         df = process_rock_names(df)
+
+
+        # =========================
+        # FUNCIÓN QA/QC
+        # Construye una tabla con banderas de control de calidad
+        # =========================
+
+        def build_qc_table(dataframe: pd.DataFrame) -> pd.DataFrame:
+
+            """
+            Aplica reglas básicas de control de calidad geoquímico:
+            - Balance de óxidos
+            - Rangos aceptables
+            - Valores nulos críticos
+            """
+
+            qc_table = dataframe.copy()
+
+            oxide_columns = [
+                "SiO2n", "TiO2n", "Al2O3n", "FeO*n", "MnOn",
+                "MgOn", "CaOn", "Na2On", "K2On", "P2O5n"
+            ]
+            # Asegura que todas las columnas existan
+            for column in oxide_columns:
+                if column not in qc_table.columns:
+                    qc_table[column] = pd.NA
+
+            # Cálculo del balance total de óxidos
+            qc_table["QC_flag"] = ""
+
+            present_oxides = [column for column in oxide_columns if column in qc_table.columns]
+            qc_table["total_oxidos"] = qc_table[present_oxides].sum(axis=1, skipna=True)
+            # Regla: balance fuera de 100 ±5 %
+            qc_table.loc[
+                (qc_table["total_oxidos"] < 95) | (qc_table["total_oxidos"] > 105),
+                "QC_flag"
+            ] += "Balance de óxidos fuera de rango; "
+
+            # Validaciones individuales (ejemplo)
+            if "SiO2n" in qc_table.columns:
+                qc_table.loc[
+                    (qc_table["SiO2n"] < 30) | (qc_table["SiO2n"] > 80),
+                    "QC_flag"
+                ] += "SiO2 fuera de rango; "
+
+            if "TiO2n" in qc_table.columns:
+                qc_table.loc[
+                    (qc_table["TiO2n"] < 0) | (qc_table["TiO2n"] > 6),
+                    "QC_flag"
+                ] += "TiO2 fuera de rango; "
+
+            if "Al2O3n" in qc_table.columns:
+                qc_table.loc[
+                    (qc_table["Al2O3n"] < 0) | (qc_table["Al2O3n"] > 30),
+                    "QC_flag"
+                ] += "Al2O3 fuera de rango; "
+
+            if "MgOn" in qc_table.columns:
+                qc_table.loc[
+                    (qc_table["MgOn"] < 0) | (qc_table["MgOn"] > 25),
+                    "QC_flag"
+                ] += "MgO fuera de rango; "
+                # Chequeo de valores nulos en campos clave
+
+            key_columns = ["rock_name", "SiO2n", "Al2O3n", "FeO*n", "MgOn"]
+            existing_key_columns = [column for column in key_columns if column in qc_table.columns]
+
+            if existing_key_columns:
+                null_mask = qc_table[existing_key_columns].isnull().any(axis=1)
+                qc_table.loc[null_mask, "QC_flag"] += "Valores nulos en campos clave; "
+
+            return qc_table
+
+
+        # ======================================
+        # FUNCIÓN PARA RESALTAR ERRORES QA/QC
+        # =======================================
+
+        def highlight_qc(row):
+            if "QC_flag" in row and isinstance(row["QC_flag"], str) and row["QC_flag"].strip() != "":
+                return ["background-color: #ffdddd"] * len(row)
+            return [""] * len(row)
 
         # =========================
         # 2. CONFIGURACIÓN DE GRÁFICOS
