@@ -165,9 +165,8 @@ if uploaded_file:
 
     if df is not None:
         # =========================
-        # 1. CARGA Y PROCESAMIENTO
+        # 1. CARGA, LIMPIEZA Y PROCESAMIENTO
         # =========================
-        # LIMPIEZA Y PROCESAMIENTO
         df = clean_data(df)
         df = add_geochemical_variables(df)
         df = process_rock_names(df)
