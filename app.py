@@ -116,12 +116,136 @@ if uploaded_file:
         # =========================
         # CONFIGURACIÓN DE GRÁFICOS
         # =========================
-        st.sidebar.subheader("⚙️ Configuración de gráficos")
+        # =========================
+        # 📈 GRÁFICOS INTERACTIVOS
+        # =========================
+        st.subheader("📈 Gráficos geoquímicos")
 
-        ancho = st.sidebar.slider("Ancho del gráfico", 5, 20, 10)
-        alto = st.sidebar.slider("Alto del gráfico", 3, 10, 5)
+        opciones_graficos = [
+            "Scatter SiO2 vs TiO2",
+            "Diagrama TAS",
+            "Serie magmática",
+            "Harker",
+            "Heatmap correlación",
+            "Distribución",
+            "Frecuencia acumulada"
+        ]
 
-        fig_size = (ancho, alto)
+        graficos_sel = st.multiselect(
+            "Selecciona los gráficos:",
+            opciones_graficos,
+            default=["Scatter SiO2 vs TiO2"]
+        )
+
+        # -------------------------
+        # SCATTER
+        # -------------------------
+        if "Scatter SiO2 vs TiO2" in graficos_sel:
+            fig = scatter_plot(
+                df_filtrado,
+                x_col="SiO2n",
+                y_col="TiO2n",
+                color_col="rock_group",
+                size=fig_size,
+                point_size=tam_punto
+            )
+            if fig:
+                st.pyplot(fig)
+
+        # -------------------------
+        # TAS
+        # -------------------------
+        if "Diagrama TAS" in graficos_sel:
+            fig = tas_plot(
+                df_filtrado,
+                color_col="rock_group",
+                size=fig_size,
+                point_size=tam_punto
+            )
+            if fig:
+                st.pyplot(fig)
+
+        # -------------------------
+        # SERIE MAGMÁTICA
+        # -------------------------
+        if "Serie magmática" in graficos_sel:
+            fig = magmatic_series_plot(
+                df_filtrado,
+                color_col="rock_group",
+                size=fig_size,
+                point_size=tam_punto
+            )
+            if fig:
+                st.pyplot(fig)
+
+        # -------------------------
+        # HARKER
+        # -------------------------
+        if "Harker" in graficos_sel:
+            opciones = ["TiO2n", "MgOn", "FeO*n", "CaOn", "Al2O3n", "Na2On", "K2On"]
+            opciones = [c for c in opciones if c in df_filtrado.columns]
+
+            if opciones:
+                variable = st.selectbox("Selecciona variable:", opciones)
+
+                fig = harker_plot(
+                    df_filtrado,
+                    variable,
+                    color_col="rock_group",
+                    size=fig_size,
+                    point_size=tam_punto
+                )
+                if fig:
+                    st.pyplot(fig)
+
+        # -------------------------
+        # HEATMAP
+        # -------------------------
+        if "Heatmap correlación" in graficos_sel:
+            corr = correlation_analysis(df_filtrado)
+
+            fig = correlation_heatmap(
+                corr,
+                size=fig_size
+            )
+            if fig:
+                st.pyplot(fig)
+
+        # -------------------------
+        # HISTOGRAMA
+        # -------------------------
+        if "Distribución" in graficos_sel:
+            opciones = ["SiO2n", "TiO2n", "Al2O3n", "MgOn", "CaOn"]
+            opciones = [c for c in opciones if c in df_filtrado.columns]
+
+            if opciones:
+                var = st.selectbox("Variable histograma:", opciones)
+
+                fig = histogram_plot(
+                    df_filtrado,
+                    var,
+                    size=fig_size
+                )
+                if fig:
+                    st.pyplot(fig)
+
+        # -------------------------
+        # FRECUENCIA ACUMULADA
+        # -------------------------
+        if "Frecuencia acumulada" in graficos_sel:
+            opciones = ["SiO2n", "TiO2n", "Al2O3n", "MgOn"]
+            opciones = [c for c in opciones if c in df_filtrado.columns]
+
+            if opciones:
+                var = st.selectbox("Variable acumulada:", opciones)
+
+                fig = cumulative_frequency_plot(
+                    df_filtrado,
+                    var,
+                    size=fig_size
+                )
+                if fig:
+                    st.pyplot(fig)
 
         # =========================
         # 2. FILTROS
