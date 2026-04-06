@@ -41,7 +41,7 @@ st.markdown(
     f'<img src="data:image/png;base64,{img_base64}" width="750">',
     unsafe_allow_html=True
 )
-
+st.subheader("⛏️ ANÁLISIS GEOQUÍMICO DE ROCAS ÍGNEAS")
 uploaded_file = st.file_uploader("Sube tu archivo CSV", type=["csv"])
 
 
