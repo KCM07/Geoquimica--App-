@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 
 plt.rcParams.update({
-    "figure.figsize": (7, 4.5),
     "font.size": 8,
     "axes.titlesize": 10,
     "axes.labelsize": 8,
@@ -13,7 +12,8 @@ plt.rcParams.update({
     "legend.fontsize": 7
 })
 
-def scatter_plot(df, x_col="SiO2n", y_col="TiO2n", color_col="rock_group"):
+
+def scatter_plot(df, x_col="SiO2n", y_col="TiO2n", color_col="rock_group", size=(8, 5), point_size=35):
     if x_col not in df.columns or y_col not in df.columns:
         return None
 
@@ -22,7 +22,7 @@ def scatter_plot(df, x_col="SiO2n", y_col="TiO2n", color_col="rock_group"):
     if color_col not in df_plot.columns:
         color_col = None
 
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=size)
 
     sns.scatterplot(
         data=df_plot,
@@ -31,7 +31,7 @@ def scatter_plot(df, x_col="SiO2n", y_col="TiO2n", color_col="rock_group"):
         hue=color_col,
         style=color_col if color_col else None,
         palette="Set2" if color_col else None,
-        s=35,
+        s=point_size,
         alpha=0.75,
         edgecolor="white",
         linewidth=0.3,
@@ -50,14 +50,13 @@ def scatter_plot(df, x_col="SiO2n", y_col="TiO2n", color_col="rock_group"):
     return fig
 
 
-
-def tas_plot(df, color_col="rock_group"):
+def tas_plot(df, color_col="rock_group", size=(8, 5), point_size=35):
     if "SiO2n" not in df.columns or "alkalis" not in df.columns:
         return None
 
     df_plot = df.copy()
 
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=size)
 
     sns.scatterplot(
         data=df_plot,
@@ -66,7 +65,7 @@ def tas_plot(df, color_col="rock_group"):
         hue=color_col if color_col in df_plot.columns else None,
         style=color_col if color_col in df_plot.columns else None,
         palette="Set2" if color_col in df_plot.columns else None,
-        s=35,
+        s=point_size,
         alpha=0.75,
         edgecolor="white",
         linewidth=0.3,
@@ -98,11 +97,11 @@ def tas_plot(df, color_col="rock_group"):
     return fig
 
 
-def harker_plot(df, y_col, color_col="rock_group"):
+def harker_plot(df, y_col, color_col="rock_group", size=(7, 4.5), point_size=30):
     if "SiO2n" not in df.columns or y_col not in df.columns:
         return None
 
-    fig, ax = plt.subplots(figsize=(7, 4.5))
+    fig, ax = plt.subplots(figsize=size)
 
     sns.scatterplot(
         data=df,
@@ -110,7 +109,7 @@ def harker_plot(df, y_col, color_col="rock_group"):
         y=y_col,
         hue=color_col if color_col in df.columns else None,
         palette="Set2" if color_col in df.columns else None,
-        s=30,
+        s=point_size,
         alpha=0.7,
         edgecolor="white",
         linewidth=0.3,
@@ -139,8 +138,8 @@ def harker_plot(df, y_col, color_col="rock_group"):
     return fig
 
 
-def correlation_heatmap(corr):
-    fig, ax = plt.subplots(figsize=(7, 5))
+def correlation_heatmap(corr, size=(7, 5)):
+    fig, ax = plt.subplots(figsize=size)
 
     sns.heatmap(
         corr,
@@ -162,7 +161,7 @@ def correlation_heatmap(corr):
     return fig
 
 
-def strong_corr_barplot(corr, top_n=10):
+def strong_corr_barplot(corr, top_n=10, size=(8, 4.5)):
     pairs = []
 
     cols = list(corr.columns)
@@ -178,7 +177,7 @@ def strong_corr_barplot(corr, top_n=10):
     names = [p[0] for p in pairs]
     values = [p[1] for p in pairs]
 
-    fig, ax = plt.subplots(figsize=(8, 4.5))
+    fig, ax = plt.subplots(figsize=size)
     ax.bar(names, values)
     ax.set_title("Correlaciones más fuertes")
     ax.set_ylabel("r")
@@ -187,11 +186,11 @@ def strong_corr_barplot(corr, top_n=10):
     return fig
 
 
-def box_plot_by_group(df, y_col="SiO2n"):
+def box_plot_by_group(df, y_col="SiO2n", size=(8, 4.5)):
     if "rock_group" not in df.columns or y_col not in df.columns:
         return None
 
-    fig, ax = plt.subplots(figsize=(8, 4.5))
+    fig, ax = plt.subplots(figsize=size)
 
     sns.boxplot(
         data=df,
@@ -209,11 +208,11 @@ def box_plot_by_group(df, y_col="SiO2n"):
     return fig
 
 
-def histogram_plot(df, col):
+def histogram_plot(df, col, size=(7, 4)):
     if col not in df.columns:
         return None
 
-    fig, ax = plt.subplots(figsize=(7, 4))
+    fig, ax = plt.subplots(figsize=size)
 
     sns.histplot(
         data=df,
@@ -231,7 +230,7 @@ def histogram_plot(df, col):
     return fig
 
 
-def cumulative_frequency_plot(df, col):
+def cumulative_frequency_plot(df, col, size=(7, 4)):
     if col not in df.columns:
         return None
 
@@ -241,7 +240,7 @@ def cumulative_frequency_plot(df, col):
 
     cumfreq = np.arange(1, len(values) + 1) / len(values) * 100
 
-    fig, ax = plt.subplots(figsize=(7, 4))
+    fig, ax = plt.subplots(figsize=size)
     ax.plot(values, cumfreq, marker=".", linestyle="-")
     ax.set_title(f"Frecuencia acumulada de {col}")
     ax.set_xlabel(col)
@@ -251,7 +250,7 @@ def cumulative_frequency_plot(df, col):
     return fig
 
 
-def qq_style_plot(df, col):
+def qq_style_plot(df, col, size=(6, 4.5), point_size=10):
     if col not in df.columns:
         return None
 
@@ -262,8 +261,8 @@ def qq_style_plot(df, col):
     probs = (np.arange(1, len(values) + 1) - 0.5) / len(values)
     theoretical = np.quantile(np.random.normal(size=5000), probs)
 
-    fig, ax = plt.subplots(figsize=(6, 4.5))
-    ax.scatter(theoretical, values, s=10, alpha=0.7)
+    fig, ax = plt.subplots(figsize=size)
+    ax.scatter(theoretical, values, s=point_size, alpha=0.7)
     ax.set_title(f"QQ aproximado - {col}")
     ax.set_xlabel("Cuantiles teóricos")
     ax.set_ylabel("Cuantiles observados")
@@ -272,11 +271,11 @@ def qq_style_plot(df, col):
     return fig
 
 
-def magmatic_series_plot(df, color_col="rock_group"):
+def magmatic_series_plot(df, color_col="rock_group", size=(7, 4.5), point_size=30):
     if "SiO2n" not in df.columns or "Fe_Mg_ratio" not in df.columns:
         return None
 
-    fig, ax = plt.subplots(figsize=(7, 4.5))
+    fig, ax = plt.subplots(figsize=size)
 
     sns.scatterplot(
         data=df,
@@ -284,7 +283,7 @@ def magmatic_series_plot(df, color_col="rock_group"):
         y="Fe_Mg_ratio",
         hue=color_col if color_col in df.columns else None,
         palette="Set2" if color_col in df.columns else None,
-        s=30,
+        s=point_size,
         alpha=0.75,
         edgecolor="white",
         linewidth=0.3,
@@ -313,11 +312,11 @@ def magmatic_series_plot(df, color_col="rock_group"):
     return fig
 
 
-def bar_plot_rock_group(df):
+def bar_plot_rock_group(df, size=(6, 4)):
     if "rock_group" not in df.columns:
         return None
 
-    fig, ax = plt.subplots(figsize=(6, 4))
+    fig, ax = plt.subplots(figsize=size)
     df["rock_group"].value_counts().plot(kind="bar", ax=ax)
     ax.set_title("Distribución por grupo litológico")
     ax.set_ylabel("Frecuencia")
@@ -326,7 +325,7 @@ def bar_plot_rock_group(df):
     return fig
 
 
-def group_mean_plot(df):
+def group_mean_plot(df, size=(8, 4.5)):
     if "rock_group" not in df.columns:
         return None
 
@@ -338,7 +337,7 @@ def group_mean_plot(df):
 
     tabla = df.groupby("rock_group")[cols].mean(numeric_only=True)
 
-    fig, ax = plt.subplots(figsize=(8, 4.5))
+    fig, ax = plt.subplots(figsize=size)
     tabla.plot(kind="bar", ax=ax)
     ax.set_title("Promedios por grupo litológico")
     ax.set_ylabel("Concentración (%)")
@@ -346,11 +345,12 @@ def group_mean_plot(df):
     plt.tight_layout()
     return fig
 
-def oxide_balance_histogram(df):
+
+def oxide_balance_histogram(df, size=(7, 4)):
     if "total_oxidos" not in df.columns:
         return None
 
-    fig, ax = plt.subplots(figsize=(7, 4))
+    fig, ax = plt.subplots(figsize=size)
 
     sns.histplot(
         data=df,
