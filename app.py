@@ -93,12 +93,13 @@ def build_qc_table(dataframe: pd.DataFrame) -> pd.DataFrame:
 
     present_oxides = [column for column in oxide_columns if column in qc_table.columns]
     qc_table["total_oxidos"] = qc_table[present_oxides].sum(axis=1, skipna=True)
-
+    # Regla: balance fuera de 100 ±5 %
     qc_table.loc[
         (qc_table["total_oxidos"] < 95) | (qc_table["total_oxidos"] > 105),
         "QC_flag"
     ] += "Balance de óxidos fuera de rango; "
 
+    # Validaciones individuales (ejemplo)
     if "SiO2n" in qc_table.columns:
         qc_table.loc[
             (qc_table["SiO2n"] < 30) | (qc_table["SiO2n"] > 80),
@@ -122,6 +123,7 @@ def build_qc_table(dataframe: pd.DataFrame) -> pd.DataFrame:
             (qc_table["MgOn"] < 0) | (qc_table["MgOn"] > 25),
             "QC_flag"
         ] += "MgO fuera de rango; "
+        # Chequeo de valores nulos en campos clave
 
     key_columns = ["rock_name", "SiO2n", "Al2O3n", "FeO*n", "MgOn"]
     existing_key_columns = [column for column in key_columns if column in qc_table.columns]
@@ -132,10 +134,19 @@ def build_qc_table(dataframe: pd.DataFrame) -> pd.DataFrame:
 
     return qc_table
 
+# ======================================
+# FUNCIÓN PARA RESALTAR ERRORES QA/QC
+# =======================================
+
+
 def highlight_qc(row):
     if "QC_flag" in row and isinstance(row["QC_flag"], str) and row["QC_flag"].strip() != "":
         return ["background-color: #ffdddd"] * len(row)
     return [""] * len(row)
+
+# ==============================
+# FUNCIÓN RESUMEN DE CATEGORÍAS
+# =============================
 
 
 def resumen_columna(dataframe: pd.DataFrame, col: str) -> pd.DataFrame:
@@ -144,6 +155,11 @@ def resumen_columna(dataframe: pd.DataFrame, col: str) -> pd.DataFrame:
     conteo["porcentaje (%)"] = (conteo["frecuencia"] / len(dataframe) * 100).round(2)
     return conteo
 
+
+# ============================================================
+# 🚀 FLUJO PRINCIPAL DE LA APP
+# ============================================================
+
 if uploaded_file:
     df = load_data(uploaded_file)
 
@@ -151,6 +167,7 @@ if uploaded_file:
         # =========================
         # 1. CARGA Y PROCESAMIENTO
         # =========================
+        # LIMPIEZA Y PROCESAMIENTO
         df = clean_data(df)
         df = add_geochemical_variables(df)
         df = process_rock_names(df)
@@ -160,9 +177,9 @@ if uploaded_file:
         # =========================
         st.sidebar.subheader("⚙️ Configuración de gráficos")
 
-        ancho = st.sidebar.slider("Ancho del gráfico", 5, 20, 10)
-        alto = st.sidebar.slider("Alto del gráfico", 3, 10, 5)
-        tam_punto = st.sidebar.slider("Tamaño de puntos", 10, 100, 35)
+        ancho = st.sidebar.slider("📐 Ancho del gráfico", 5, 20, 10)
+        alto = st.sidebar.slider("📏 Alto del gráfico", 3, 10, 5)
+        tam_punto = st.sidebar.slider("🔵 Tamaño de puntos", 10, 100, 35)
 
         fig_size = (ancho, alto)
 
