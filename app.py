@@ -38,14 +38,9 @@ def get_base64_image(path):
 img_base64 = get_base64_image("assets/Logo_.png")
 
 st.markdown(
-    f'<img src="data:image/png;base64,{img_base64}" width="450">',
+    f'<img src="data:image/png;base64,{img_base64}" width="150">',
     unsafe_allow_html=True
 )
-with col2:
-    st.markdown(
-        "<h1 style='margin:0;'>⛏️ Análisis Geoquímico de Rocas Ígneas</h1>",
-        unsafe_allow_html=True
-    )
 
 uploaded_file = st.file_uploader("Sube tu archivo CSV", type=["csv"])
 
