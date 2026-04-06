@@ -34,7 +34,7 @@ col1, col2 = st.columns([2, 10])
 with col1:
     st.markdown(
         """
-        <img src="assets/Logo_.png" width="150">
+        <img src="assets/Logo_.png" width="900">
         """,
         unsafe_allow_html=True
     )
