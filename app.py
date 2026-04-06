@@ -114,141 +114,18 @@ if uploaded_file:
         df = process_rock_names(df)
 
         # =========================
-        # CONFIGURACIÓN DE GRÁFICOS
+        # 2. CONFIGURACIÓN DE GRÁFICOS
         # =========================
-        # =========================
-        # 📈 GRÁFICOS INTERACTIVOS
-        # =========================
-        st.subheader("📈 Gráficos geoquímicos")
+        st.sidebar.subheader("⚙️ Configuración de gráficos")
 
-        opciones_graficos = [
-            "Scatter SiO2 vs TiO2",
-            "Diagrama TAS",
-            "Serie magmática",
-            "Harker",
-            "Heatmap correlación",
-            "Distribución",
-            "Frecuencia acumulada"
-        ]
+        ancho = st.sidebar.slider("Ancho del gráfico", 5, 20, 10)
+        alto = st.sidebar.slider("Alto del gráfico", 3, 10, 5)
+        tam_punto = st.sidebar.slider("Tamaño de puntos", 10, 100, 35)
 
-        graficos_sel = st.multiselect(
-            "Selecciona los gráficos:",
-            opciones_graficos,
-            default=["Scatter SiO2 vs TiO2"]
-        )
-
-        # -------------------------
-        # SCATTER
-        # -------------------------
-        if "Scatter SiO2 vs TiO2" in graficos_sel:
-            fig = scatter_plot(
-                df_filtrado,
-                x_col="SiO2n",
-                y_col="TiO2n",
-                color_col="rock_group",
-                size=fig_size,
-                point_size=tam_punto
-            )
-            if fig:
-                st.pyplot(fig)
-
-        # -------------------------
-        # TAS
-        # -------------------------
-        if "Diagrama TAS" in graficos_sel:
-            fig = tas_plot(
-                df_filtrado,
-                color_col="rock_group",
-                size=fig_size,
-                point_size=tam_punto
-            )
-            if fig:
-                st.pyplot(fig)
-
-        # -------------------------
-        # SERIE MAGMÁTICA
-        # -------------------------
-        if "Serie magmática" in graficos_sel:
-            fig = magmatic_series_plot(
-                df_filtrado,
-                color_col="rock_group",
-                size=fig_size,
-                point_size=tam_punto
-            )
-            if fig:
-                st.pyplot(fig)
-
-        # -------------------------
-        # HARKER
-        # -------------------------
-        if "Harker" in graficos_sel:
-            opciones = ["TiO2n", "MgOn", "FeO*n", "CaOn", "Al2O3n", "Na2On", "K2On"]
-            opciones = [c for c in opciones if c in df_filtrado.columns]
-
-            if opciones:
-                variable = st.selectbox("Selecciona variable:", opciones)
-
-                fig = harker_plot(
-                    df_filtrado,
-                    variable,
-                    color_col="rock_group",
-                    size=fig_size,
-                    point_size=tam_punto
-                )
-                if fig:
-                    st.pyplot(fig)
-
-        # -------------------------
-        # HEATMAP
-        # -------------------------
-        if "Heatmap correlación" in graficos_sel:
-            corr = correlation_analysis(df_filtrado)
-
-            fig = correlation_heatmap(
-                corr,
-                size=fig_size
-            )
-            if fig:
-                st.pyplot(fig)
-
-        # -------------------------
-        # HISTOGRAMA
-        # -------------------------
-        if "Distribución" in graficos_sel:
-            opciones = ["SiO2n", "TiO2n", "Al2O3n", "MgOn", "CaOn"]
-            opciones = [c for c in opciones if c in df_filtrado.columns]
-
-            if opciones:
-                var = st.selectbox("Variable histograma:", opciones)
-
-                fig = histogram_plot(
-                    df_filtrado,
-                    var,
-                    size=fig_size
-                )
-                if fig:
-                    st.pyplot(fig)
-
-        # -------------------------
-        # FRECUENCIA ACUMULADA
-        # -------------------------
-        if "Frecuencia acumulada" in graficos_sel:
-            opciones = ["SiO2n", "TiO2n", "Al2O3n", "MgOn"]
-            opciones = [c for c in opciones if c in df_filtrado.columns]
-
-            if opciones:
-                var = st.selectbox("Variable acumulada:", opciones)
-
-                fig = cumulative_frequency_plot(
-                    df_filtrado,
-                    var,
-                    size=fig_size
-                )
-                if fig:
-                    st.pyplot(fig)
+        fig_size = (ancho, alto)
 
         # =========================
-        # 2. FILTROS
+        # 3. FILTROS
         # =========================
         st.subheader("🎛️ Filtros")
 
@@ -266,7 +143,7 @@ if uploaded_file:
         st.write(f"Filas después de filtros: {df_filtrado.shape[0]}")
 
         # =========================
-        # 3. VISUALIZACIÓN DE DATOS
+        # 4. VISUALIZACIÓN DE DATOS
         # =========================
         st.subheader("📋 Visualización de los datos")
         st.write(f"Filas totales cargadas: {df.shape[0]} | Columnas: {df.shape[1]}")
@@ -282,36 +159,37 @@ if uploaded_file:
             st.dataframe(df_filtrado.head(50), use_container_width=True, height=500)
 
         elif modo == "Elegir rango":
-            col1, col2 = st.columns(2)
-
-            with col1:
-                inicio = st.number_input(
-                    "Fila inicial",
-                    min_value=0,
-                    max_value=max(len(df_filtrado) - 1, 0),
-                    value=0
-                )
-
-            with col2:
-                fin = st.number_input(
-                    "Fila final",
-                    min_value=1,
-                    max_value=max(len(df_filtrado), 1),
-                    value=min(50, len(df_filtrado)) if len(df_filtrado) > 0 else 1
-                )
-
             if len(df_filtrado) == 0:
                 st.warning("No hay datos después del filtro.")
-            elif inicio < fin:
-                st.dataframe(df_filtrado.iloc[inicio:fin], use_container_width=True, height=500)
             else:
-                st.warning("⚠️ La fila inicial debe ser menor que la final")
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    inicio = st.number_input(
+                        "Fila inicial",
+                        min_value=0,
+                        max_value=len(df_filtrado) - 1,
+                        value=0
+                    )
+
+                with col2:
+                    fin = st.number_input(
+                        "Fila final",
+                        min_value=1,
+                        max_value=len(df_filtrado),
+                        value=min(50, len(df_filtrado))
+                    )
+
+                if inicio < fin:
+                    st.dataframe(df_filtrado.iloc[inicio:fin], use_container_width=True, height=500)
+                else:
+                    st.warning("⚠️ La fila inicial debe ser menor que la final")
 
         elif modo == "Ver todo":
             st.dataframe(df_filtrado, use_container_width=True, height=500)
 
         # =========================
-        # 4. ESTRUCTURA DE VARIABLES
+        # 5. ESTRUCTURA DE VARIABLES
         # =========================
         st.subheader("📊 Estructura de variables")
 
@@ -336,7 +214,7 @@ if uploaded_file:
             st.write(calculadas)
 
         # =========================
-        # 5. FÓRMULAS Y CONCEPTOS
+        # 6. FÓRMULAS Y CONCEPTOS
         # =========================
         st.subheader("📐 Fórmulas y conceptos clave")
 
@@ -359,7 +237,7 @@ if uploaded_file:
         """)
 
         # =========================
-        # 6. QA/QC
+        # 7. QA/QC
         # =========================
         st.subheader("🚨 Control de calidad (QA/QC)")
 
@@ -390,7 +268,7 @@ if uploaded_file:
             st.dataframe(df_clean_qc, use_container_width=True, height=500)
 
         # =========================
-        # 7. REAGRUPACIÓN LITOLÓGICA
+        # 8. REAGRUPACIÓN LITOLÓGICA
         # =========================
         st.subheader("🪨 Reagrupación litológica")
 
@@ -446,18 +324,18 @@ if uploaded_file:
                 st.info("Columna rock_group no disponible")
 
         st.subheader("📊 Distribución de grupos litológicos")
-        fig_group_dist = bar_plot_rock_group(df_filtrado)
+        fig_group_dist = bar_plot_rock_group(df_filtrado, size=fig_size)
         if fig_group_dist is not None:
             st.pyplot(fig_group_dist)
 
         # =========================
-        # 8. ESTADÍSTICAS
+        # 9. ESTADÍSTICAS
         # =========================
         st.subheader("📊 Estadísticas descriptivas")
         st.dataframe(descriptive_stats(df_filtrado), use_container_width=True)
 
         # =========================
-        # 9. CORRELACIÓN
+        # 10. CORRELACIÓN
         # =========================
         st.subheader("🔗 Matriz de correlación")
         corr = correlation_analysis(df_filtrado)
@@ -467,7 +345,7 @@ if uploaded_file:
         st.dataframe(strong_correlations(corr), use_container_width=True)
 
         # =========================
-        # 10. GRÁFICOS SELECCIONABLES
+        # 11. GRÁFICOS SELECCIONABLES
         # =========================
         st.subheader("📈 Exploración gráfica")
 
@@ -494,17 +372,34 @@ if uploaded_file:
         )
 
         if "Scatter SiO2 vs TiO2" in graficos_sel:
-            fig = scatter_plot(df_filtrado, x_col="SiO2n", y_col="TiO2n", color_col="rock_group")
+            fig = scatter_plot(
+                df_filtrado,
+                x_col="SiO2n",
+                y_col="TiO2n",
+                color_col="rock_group",
+                size=fig_size,
+                point_size=tam_punto
+            )
             if fig is not None:
                 st.pyplot(fig)
 
         if "Diagrama TAS" in graficos_sel:
-            fig = tas_plot(df_filtrado, color_col="rock_group")
+            fig = tas_plot(
+                df_filtrado,
+                color_col="rock_group",
+                size=fig_size,
+                point_size=tam_punto
+            )
             if fig is not None:
                 st.pyplot(fig)
 
         if "Series magmáticas" in graficos_sel:
-            fig = magmatic_series_plot(df_filtrado, color_col="rock_group")
+            fig = magmatic_series_plot(
+                df_filtrado,
+                color_col="rock_group",
+                size=fig_size,
+                point_size=tam_punto
+            )
             if fig is not None:
                 st.pyplot(fig)
 
@@ -514,27 +409,33 @@ if uploaded_file:
 
             if y_options:
                 elem = st.selectbox("Selecciona variable Harker:", y_options)
-                fig = harker_plot(df_filtrado, elem, color_col="rock_group")
+                fig = harker_plot(
+                    df_filtrado,
+                    elem,
+                    color_col="rock_group",
+                    size=fig_size,
+                    point_size=tam_punto
+                )
                 if fig is not None:
                     st.pyplot(fig)
 
         if "Heatmap de correlación" in graficos_sel:
-            fig = correlation_heatmap(corr)
+            fig = correlation_heatmap(corr, size=fig_size)
             if fig is not None:
                 st.pyplot(fig)
 
         if "Barras de correlaciones fuertes" in graficos_sel:
-            fig = strong_corr_barplot(corr, top_n=10)
+            fig = strong_corr_barplot(corr, top_n=10, size=fig_size)
             if fig is not None:
                 st.pyplot(fig)
 
         if "Distribución por grupo litológico" in graficos_sel:
-            fig = bar_plot_rock_group(df_filtrado)
+            fig = bar_plot_rock_group(df_filtrado, size=fig_size)
             if fig is not None:
                 st.pyplot(fig)
 
         if "Promedios por grupo litológico" in graficos_sel:
-            fig = group_mean_plot(df_filtrado)
+            fig = group_mean_plot(df_filtrado, size=fig_size)
             if fig is not None:
                 st.pyplot(fig)
 
@@ -544,7 +445,7 @@ if uploaded_file:
 
             if vars_box:
                 var_box = st.selectbox("Variable para boxplot:", vars_box)
-                fig = box_plot_by_group(df_filtrado, y_col=var_box)
+                fig = box_plot_by_group(df_filtrado, y_col=var_box, size=fig_size)
                 if fig is not None:
                     st.pyplot(fig)
 
@@ -554,7 +455,7 @@ if uploaded_file:
 
             if vars_hist:
                 var_hist = st.selectbox("Variable para histograma:", vars_hist)
-                fig = histogram_plot(df_filtrado, var_hist)
+                fig = histogram_plot(df_filtrado, var_hist, size=fig_size)
                 if fig is not None:
                     st.pyplot(fig)
 
@@ -564,7 +465,7 @@ if uploaded_file:
 
             if vars_cum:
                 var_cum = st.selectbox("Variable para frecuencia acumulada:", vars_cum)
-                fig = cumulative_frequency_plot(df_filtrado, var_cum)
+                fig = cumulative_frequency_plot(df_filtrado, var_cum, size=fig_size)
                 if fig is not None:
                     st.pyplot(fig)
 
@@ -574,25 +475,25 @@ if uploaded_file:
 
             if vars_qq:
                 var_qq = st.selectbox("Variable para QQ:", vars_qq)
-                fig = qq_style_plot(df_filtrado, var_qq)
+                fig = qq_style_plot(df_filtrado, var_qq, size=fig_size, point_size=tam_punto)
                 if fig is not None:
                     st.pyplot(fig)
 
         if "Histograma balance de óxidos" in graficos_sel:
             if "total_oxidos" in df_qc.columns:
-                fig = oxide_balance_histogram(df_qc)
+                fig = oxide_balance_histogram(df_qc, size=fig_size)
                 if fig is not None:
                     st.pyplot(fig)
 
         # =========================
-        # 11. GEOESPACIAL
+        # 12. GEOESPACIAL
         # =========================
         if "long" in df_filtrado.columns and "lat" in df_filtrado.columns:
             st.subheader("🌍 Ubicación de muestras")
-            st.pyplot(plot_locations(df_filtrado))
+            st.pyplot(plot_locations(df_filtrado, size=fig_size, point_size=tam_punto))
 
         # =========================
-        # 12. VARIABLES EXTRA
+        # 13. VARIABLES EXTRA
         # =========================
         if "tipo_alumina" in df_filtrado.columns:
             st.subheader("🧪 Saturación de alúmina")
