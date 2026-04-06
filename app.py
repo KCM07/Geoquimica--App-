@@ -29,16 +29,18 @@ from modules.rock_name_processing import process_rock_names
 
 st.set_page_config(page_title="Análisis Geoquímico", layout="wide")
 
-col1, col2 = st.columns([2, 10])
+import base64
 
-with col1:
-    st.markdown(
-        """
-        <img src="assets/Logo_.png" width="900">
-        """,
-        unsafe_allow_html=True
-    )
+def get_base64_image(path):
+    with open(path, "rb") as img:
+        return base64.b64encode(img.read()).decode()
 
+img_base64 = get_base64_image("assets/Logo_.png")
+
+st.markdown(
+    f'<img src="data:image/png;base64,{img_base64}" width="450">',
+    unsafe_allow_html=True
+)
 with col2:
     st.markdown(
         "<h1 style='margin:0;'>⛏️ Análisis Geoquímico de Rocas Ígneas</h1>",
