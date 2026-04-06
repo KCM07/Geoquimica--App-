@@ -13,7 +13,6 @@ plt.rcParams.update({
     "legend.fontsize": 7
 })
 
-
 def scatter_plot(df, x_col="SiO2n", y_col="TiO2n", color_col="rock_group"):
     if x_col not in df.columns or y_col not in df.columns:
         return None
@@ -49,6 +48,7 @@ def scatter_plot(df, x_col="SiO2n", y_col="TiO2n", color_col="rock_group"):
 
     plt.tight_layout()
     return fig
+
 
 
 def tas_plot(df, color_col="rock_group"):

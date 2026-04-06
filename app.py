@@ -114,6 +114,16 @@ if uploaded_file:
         df = process_rock_names(df)
 
         # =========================
+        # CONFIGURACIÓN DE GRÁFICOS
+        # =========================
+        st.sidebar.subheader("⚙️ Configuración de gráficos")
+
+        ancho = st.sidebar.slider("Ancho del gráfico", 5, 20, 10)
+        alto = st.sidebar.slider("Alto del gráfico", 3, 10, 5)
+
+        fig_size = (ancho, alto)
+
+        # =========================
         # 2. FILTROS
         # =========================
         st.subheader("🎛️ Filtros")
