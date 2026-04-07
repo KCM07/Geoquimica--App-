@@ -80,8 +80,9 @@ st.markdown(
         align-items:center;
         gap:10px;
         margin-bottom:25px;
-        padding:15px;
+        padding:20px;
     ">
+
         <img src="data:image/png;base64,{img_base64}" width="750">
 
         <h1 style="
@@ -103,6 +104,7 @@ st.markdown(
         ">
             Kem Carbajal Moscoso
         </p>
+
     </div>
     """,
     unsafe_allow_html=True
