@@ -255,7 +255,6 @@ def apply_outlier_treatment(dataframe: pd.DataFrame, columns: list[str], method:
 
     return df
 
-
 def summarize_oxidation_proxy(dataframe: pd.DataFrame) -> pd.DataFrame:
     if "Fe_Mg_ratio" not in dataframe.columns or "rock_group" not in dataframe.columns:
         return pd.DataFrame()
