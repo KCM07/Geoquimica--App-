@@ -71,43 +71,17 @@ def get_base64_image(path: str) -> str:
 
 
 img_base64 = get_base64_image("assets/Logo_.png")
-st.write("")  # fuerza render limpio
 st.markdown(
     f"""
-    <div style="
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        gap:10px;
-        margin-bottom:25px;
-        padding:20px;
-    ">
-        <img src="data:image/png;base64,{img_base64}" width="600"/>
-
-        <h1 style="
-            margin:0;
-            text-align:center;
-            font-size:34px;
-            font-weight:700;
-        ">
+    <div style="display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:10px;">
+        <img src="data:image/png;base64,{img_base64}" width="750">
+        <h1 style="margin:0; text-align:center;">
             ⛏️ ANÁLISIS GEOQUÍMICO DE ROCAS ÍGNEAS
         </h1>
-
-        <p style="
-            margin:0;
-            font-size:15px;
-            color:#888;
-            text-align:center;
-            letter-spacing:1.2px;
-            font-style:italic;
-        ">
-            Kem Carbajal Moscoso
-        </p>
     </div>
     """,
     unsafe_allow_html=True
 )
-
 uploaded_file = st.file_uploader("Sube tu archivo CSV", type=["csv"])
 
 # ============================================================
