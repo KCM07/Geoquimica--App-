@@ -2,18 +2,6 @@
 # PROYECTO GEOQUÍMICO - PYTHON
 # ================================
 
-# ================================
-# IMPORTACIÓN DE MÓDULOS
-# Cada módulo contiene una etapa del flujo geoquímico:
-# - loader: lectura de datos
-# - cleaning: limpieza y estandarización
-# - analysis: cálculos geoquímicos y estadísticos
-# - visualization: generación de gráficos
-# - geospatial: análisis espacial
-# - rock_name_processing: normalización litológica
-# ================================
-
-
 from modules.loader import load_data
 from modules.cleaning import clean_data
 from modules.analysis import (
@@ -40,21 +28,51 @@ from modules.visualization import (
 from modules.geospatial import plot_locations
 from modules.rock_name_processing import process_rock_names
 
+import pandas as pd
 
+
+# =========================
+# TAS CLASS (NUEVO 🔥)
+# =========================
+def classify_tas_simple(sio2, alkalis):
+    if pd.isna(sio2) or pd.isna(alkalis):
+        return "unknown"
+
+    if sio2 < 45:
+        return "ultrabasic"
+    elif 45 <= sio2 < 52:
+        return "basalt"
+    elif 52 <= sio2 < 57:
+        return "basaltic andesite"
+    elif 57 <= sio2 < 63:
+        return "andesite"
+    elif 63 <= sio2 < 69:
+        return "dacite"
+    else:
+        return "rhyolite"
+
+
+def add_tas_class(df):
+    df = df.copy()
+
+    if "alkalis" not in df.columns and "Na2On" in df.columns and "K2On" in df.columns:
+        df["alkalis"] = df["Na2On"] + df["K2On"]
+
+    if "SiO2n" in df.columns and "alkalis" in df.columns:
+        df["tas_class"] = df.apply(
+            lambda row: classify_tas_simple(row["SiO2n"], row["alkalis"]),
+            axis=1
+        )
+    else:
+        df["tas_class"] = "unknown"
+
+    return df
+
+
+# =========================
+# QA/QC
+# =========================
 def qa_qc_report(df):
-
-    """
-     REPORTE QA/QC (Calidad de datos geoquímicos)
-
-    Esta función realiza una revisión inicial del dataset:
-    - Dimensiones del conjunto de datos
-    - Valores nulos por columna
-    - Filas duplicadas
-    - Balance de óxidos mayores
-    - Validación de rangos geoquímicos razonables
-
-    No modifica los datos, solo genera diagnóstico.
-    """
 
     print("\n" + "=" * 60)
     print("QA/QC - REPORTE DE CALIDAD DE DATOS")
@@ -75,73 +93,59 @@ def qa_qc_report(df):
     ]
 
     if all(col in df.columns for col in oxidos):
-        #  Cálculo del balance total de óxidos mayores
-        # En análisis geoquímico, la suma ideal debe aproximarse a 100 %
-
         df["total_oxidos"] = df[oxidos].sum(axis=1)
+
         print("\nBalance de óxidos:")
         print(df["total_oxidos"].describe())
 
     print("\nValidación de rangos:")
+
     if "SiO2n" in df.columns:
-        fuera_rango_sio2 = df[(df["SiO2n"] < 30) | (df["SiO2n"] > 80)].shape[0]
-        print(f"SiO2 fuera de rango: {fuera_rango_sio2}")
+        print("SiO2 fuera de rango:", df[(df["SiO2n"] < 30) | (df["SiO2n"] > 80)].shape[0])
 
     if "TiO2n" in df.columns:
-        fuera_rango_tio2 = df[(df["TiO2n"] < 0) | (df["TiO2n"] > 6)].shape[0]
-        print(f"TiO2 fuera de rango: {fuera_rango_tio2}")
+        print("TiO2 fuera de rango:", df[(df["TiO2n"] < 0) | (df["TiO2n"] > 6)].shape[0])
 
     if "Al2O3n" in df.columns:
-        fuera_rango_al = df[(df["Al2O3n"] < 0) | (df["Al2O3n"] > 30)].shape[0]
-        print(f"Al2O3 fuera de rango: {fuera_rango_al}")
+        print("Al2O3 fuera de rango:", df[(df["Al2O3n"] < 0) | (df["Al2O3n"] > 30)].shape[0])
 
     if "MgOn" in df.columns:
-        fuera_rango_mg = df[(df["MgOn"] < 0) | (df["MgOn"] > 25)].shape[0]
-        print(f"MgO fuera de rango: {fuera_rango_mg}")
+        print("MgO fuera de rango:", df[(df["MgOn"] < 0) | (df["MgOn"] > 25)].shape[0])
 
     return df
 
 
+# =========================
+# RESUMEN LITOLÓGICO
+# =========================
 def print_lithology_summary(df):
-    """
-       RESUMEN LITOLÓGICO
-
-       Genera conteos de:
-       - roca base
-       - contexto litológico
-       - grupo litológico
-       - observaciones
-
-       Permite validar la reagrupación litológica
-       y evaluar representatividad de muestras.
-       """
 
     print("\n" + "=" * 60)
-    print("RESUMEN LITOLÓGICO REAGRUPADO")
+    print("RESUMEN LITOLÓGICO")
     print("=" * 60)
 
     if "rock_base" in df.columns:
-        print("\nConteo por roca base:")
+        print("\nRoca base:")
         print(df["rock_base"].value_counts())
 
     if "rock_context" in df.columns:
-        print("\nConteo por contexto litológico:")
+        print("\nContexto:")
         print(df["rock_context"].value_counts())
 
     if "rock_group" in df.columns:
-        print("\nConteo por grupo litológico:")
+        print("\nGrupo:")
         print(df["rock_group"].value_counts())
 
     if "rock_observation" in df.columns:
-        print("\nObservaciones litológicas:")
+        print("\nObservaciones:")
         print(df["rock_observation"].value_counts())
 
 
+# =========================
+# MAIN
+# =========================
 def main():
-    # =========================
-    # 1. CARGAR DATOS
-    # Se lee el archivo CSV principal del proyecto
-    # =========================
+
     path = "data/2_Geology_dataset.csv"
     df = load_data(path)
 
@@ -149,136 +153,83 @@ def main():
         print("No se pudo cargar el archivo.")
         return
 
-    # =========================
-    # 2. QA/QC INICIAL
-    # Diagnóstico de calidad antes de limpiar datos
-    # =========================
+    # 1 QA/QC
     df = qa_qc_report(df)
 
-    # =========================
-    # 3. LIMPIEZA
-    # Normaliza formatos, elimina errores y prepara el dataset
-    # =========================
+    # 2 limpieza
     df = clean_data(df)
 
-    # =========================
-    # 4. VARIABLES GEOQUÍMICAS
-    # Se calculan índices usados en interpretación magmática
-    # =========================
+    # 3 variables geoquímicas
     df = add_geochemical_variables(df)
 
-    # =========================
-    # 5. REAGRUPACIÓN LITOLÓGICA
-    # Estandariza nombres de roca y agrupa por categoría
-    # =========================
+    # 🔥 NUEVO TAS
+    df = add_tas_class(df)
+
+    # 4 reagrupación
     if "rock_name" in df.columns:
         df = process_rock_names(df)
 
-    # =========================
-    # 6. ESTADÍSTICAS
-    # Media, mediana, desviación, min, max
-    # =========================
-    print("\n" + "=" * 60)
-    print("ESTADÍSTICAS DESCRIPTIVAS")
-    print("=" * 60)
+    # 5 estadísticas
+    print("\nESTADÍSTICAS")
     print(descriptive_stats(df))
 
-    # =========================
-    # 7. CORRELACIÓN
-    # Relaciones geoquímicas entre óxidos
-    # =========================
-    print("\n" + "=" * 60)
-    print("MATRIZ DE CORRELACIÓN")
-    print("=" * 60)
+    # 6 correlación
     corr = correlation_analysis(df)
+    print("\nCORRELACIÓN")
     print(corr)
 
-    print("\n" + "=" * 60)
-    print("CORRELACIONES FUERTES")
-    print("=" * 60)
+    print("\nCORRELACIONES FUERTES")
     print(strong_correlations(corr))
 
-    # =========================
-    # 8. RESUMEN LITOLÓGICO
-    # =========================
+    # 7 litología
     print_lithology_summary(df)
 
-    # =========================
-    # 9. VARIABLES EXTRA
-    # =========================
+    # 8 alumina
     if "tipo_alumina" in df.columns:
-        print("\n" + "=" * 60)
-        print("SATURACIÓN DE ALÚMINA")
-        print("=" * 60)
+        print("\nSATURACIÓN DE ALÚMINA")
         print(df["tipo_alumina"].value_counts())
 
     # =========================
-    # 10. GENERAR GRÁFICOS
-    # Visualización geoquímica clásica
-
-    #  Diagrama TAS: clasificación química de rocas ígneas
-    #  Diagramas de Harker: tendencias magmáticas
-    #  Heatmap: relaciones multivariantes
-    #  Series magmáticas: evolución composicional
-    #  Histogramas y QQ: distribución de datos
-
+    # GRÁFICOS
     # =========================
     print("\nGenerando gráficos...")
 
-    # Scatter principal
     scatter_plot(df)
 
-    # TAS
-    tas_plot(df)
+    # 🔥 TAS CORREGIDO
+    tas_plot(df, color_col="tas_class")
 
-    # Harker principales
     for elem in ["TiO2n", "MgOn", "FeO*n", "CaOn", "Al2O3n", "Na2On", "K2On", "P2O5n"]:
         if elem in df.columns:
             harker_plot(df, elem)
 
-    # Heatmap
     correlation_heatmap(corr)
-
-    # Barras de correlaciones fuertes
     strong_corr_barplot(corr)
 
-    # Distribución por grupo litológico
     if "rock_group" in df.columns:
         bar_plot_rock_group(df)
         group_mean_plot(df)
 
-    # Boxplot por grupo
     if "rock_group" in df.columns and "SiO2n" in df.columns:
         box_plot_by_group(df, y_col="SiO2n")
 
-    # Histogramas
     for elem in ["SiO2n", "TiO2n", "Al2O3n", "MgOn"]:
         if elem in df.columns:
             histogram_plot(df, elem)
             cumulative_frequency_plot(df, elem)
             qq_style_plot(df, elem)
 
-    # Serie magmática
     if "Fe_Mg_ratio" in df.columns:
         magmatic_series_plot(df)
 
-    # Balance de óxidos
     if "total_oxidos" in df.columns:
         oxide_balance_histogram(df)
-
-    # =========================
-    # GEOESPACIAL
-    # Visualiza distribución espacial de muestras
-    # =========================
 
     if "long" in df.columns and "lat" in df.columns:
         plot_locations(df)
 
     print("✔ Proceso finalizado correctamente.")
 
-
-# Punto de entrada del programa
-# Garantiza ejecución controlada del flujo principal
 
 if __name__ == "__main__":
     main()
