@@ -74,11 +74,31 @@ img_base64 = get_base64_image("assets/Logo_.png")
 
 st.markdown(
     f"""
-    <div style="display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:10px;">
-        <img src="data:image/png;base64,{img_base64}" width="850">
-        <h1 style="margin:0; text-align:center;">
+    <div style="
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        gap:6px;
+        margin-bottom:20px;
+    ">
+        <img src="data:image/png;base64,{img_base64}" width="750">
+
+        <h1 style="
+            margin:0;
+            text-align:center;
+            font-size:32px;
+        ">
             ⛏️ ANÁLISIS GEOQUÍMICO DE ROCAS ÍGNEAS
         </h1>
+
+        <p style="
+            margin:0;
+            font-size:14px;
+            color:gray;
+            text-align:center;
+        ">
+            Kem Carbajal Moscoso
+        </p>
     </div>
     """,
     unsafe_allow_html=True
