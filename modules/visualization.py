@@ -50,7 +50,7 @@ def scatter_plot(df, x_col="SiO2n", y_col="TiO2n", color_col="rock_group", size=
     return fig
 
 
-def tas_plot(df, color_col="rock_group", size=(8, 5), point_size=35):
+def tas_plot(df, color_col="tas_class", size=(8, 5), point_size=35):
     if "SiO2n" not in df.columns or "alkalis" not in df.columns:
         return None
 
@@ -58,13 +58,15 @@ def tas_plot(df, color_col="rock_group", size=(8, 5), point_size=35):
 
     fig, ax = plt.subplots(figsize=size)
 
+    hue_col = color_col if color_col in df_plot.columns else None
+
     sns.scatterplot(
         data=df_plot,
         x="SiO2n",
         y="alkalis",
-        hue=color_col if color_col in df_plot.columns else None,
-        style=color_col if color_col in df_plot.columns else None,
-        palette="Set2" if color_col in df_plot.columns else None,
+        hue=hue_col,
+        style=hue_col,
+        palette="Set2" if hue_col else None,
         s=point_size,
         alpha=0.75,
         edgecolor="white",
@@ -72,26 +74,25 @@ def tas_plot(df, color_col="rock_group", size=(8, 5), point_size=35):
         ax=ax
     )
 
-    # Límites TAS simplificados
     ax.axvline(45, color="gray", linestyle="--", linewidth=0.8)
     ax.axvline(52, color="gray", linestyle="--", linewidth=0.8)
     ax.axvline(57, color="gray", linestyle="--", linewidth=0.8)
     ax.axvline(63, color="gray", linestyle="--", linewidth=0.8)
     ax.axvline(69, color="gray", linestyle="--", linewidth=0.8)
 
-    ax.text(41, 1, "Basalt", fontsize=7)
-    ax.text(49, 2, "Basaltic\nandesite", fontsize=7, ha="center")
-    ax.text(54.5, 3, "Andesite", fontsize=7, ha="center")
-    ax.text(60, 4, "Dacite", fontsize=7, ha="center")
-    ax.text(72, 5, "Rhyolite", fontsize=7, ha="center")
+    ax.text(41, 1.0, "Basalt", fontsize=7)
+    ax.text(49, 2.0, "Basaltic\nandesite", fontsize=7, ha="center")
+    ax.text(54.5, 3.0, "Andesite", fontsize=7, ha="center")
+    ax.text(60, 4.0, "Dacite", fontsize=7, ha="center")
+    ax.text(72, 5.0, "Rhyolite", fontsize=7, ha="center")
 
     ax.set_title("Diagrama TAS")
     ax.set_xlabel("SiO2 (%)")
     ax.set_ylabel("Na2O + K2O (%)")
     ax.grid(True, linestyle="--", alpha=0.3)
 
-    if color_col in df_plot.columns:
-        ax.legend(title=color_col, fontsize=7, title_fontsize=8, loc="best", frameon=True)
+    if hue_col:
+        ax.legend(title=hue_col, fontsize=7, title_fontsize=8, loc="best", frameon=True)
 
     plt.tight_layout()
     return fig
@@ -367,5 +368,145 @@ def oxide_balance_histogram(df, size=(7, 4)):
     ax.set_title("Balance de óxidos")
     ax.set_xlabel("Suma de óxidos (%)")
     ax.set_ylabel("Frecuencia")
+    plt.tight_layout()
+    return fig
+
+
+# ============================================================
+# FUNCIONES NUEVAS PARA QUE EL APP NO FALLE
+# ============================================================
+def irvine_baragar_plot(df, color_col="rock_group", size=(7, 4.5), point_size=30):
+    """
+    Aproximación práctica usando Fe/Mg vs SiO2.
+    Si ya usas magmatic_series_plot, esta función da compatibilidad
+    con el app sin romper el flujo.
+    """
+    if "SiO2n" not in df.columns or "Fe_Mg_ratio" not in df.columns:
+        return None
+
+    fig, ax = plt.subplots(figsize=size)
+
+    sns.scatterplot(
+        data=df,
+        x="SiO2n",
+        y="Fe_Mg_ratio",
+        hue=color_col if color_col in df.columns else None,
+        palette="Set2" if color_col in df.columns else None,
+        s=point_size,
+        alpha=0.75,
+        edgecolor="white",
+        linewidth=0.3,
+        ax=ax
+    )
+
+    sns.regplot(
+        data=df,
+        x="SiO2n",
+        y="Fe_Mg_ratio",
+        scatter=False,
+        ci=None,
+        line_kws={"color": "black", "linewidth": 1},
+        ax=ax
+    )
+
+    ax.set_title("Irvine y Baragar (aproximado)")
+    ax.set_xlabel("SiO2 (%)")
+    ax.set_ylabel("FeO* / MgO")
+    ax.grid(True, linestyle="--", alpha=0.3)
+
+    if color_col in df.columns:
+        ax.legend(title=color_col, fontsize=7, title_fontsize=8, loc="best", frameon=True)
+
+    plt.tight_layout()
+    return fig
+
+
+def ringwood_plot(df, color_col="rock_group", size=(7, 4.5), point_size=30):
+    """
+    Aproximación exploratoria: MgO vs FeO*.
+    """
+    if "MgOn" not in df.columns or "FeO*n" not in df.columns:
+        return None
+
+    fig, ax = plt.subplots(figsize=size)
+
+    sns.scatterplot(
+        data=df,
+        x="MgOn",
+        y="FeO*n",
+        hue=color_col if color_col in df.columns else None,
+        style=color_col if color_col in df.columns else None,
+        palette="Set2" if color_col in df.columns else None,
+        s=point_size,
+        alpha=0.75,
+        edgecolor="white",
+        linewidth=0.3,
+        ax=ax
+    )
+
+    sns.regplot(
+        data=df,
+        x="MgOn",
+        y="FeO*n",
+        scatter=False,
+        ci=None,
+        line_kws={"color": "black", "linewidth": 1},
+        ax=ax
+    )
+
+    ax.set_title("Ringwood (aproximado)")
+    ax.set_xlabel("MgO (%)")
+    ax.set_ylabel("FeO* (%)")
+    ax.grid(True, linestyle="--", alpha=0.3)
+
+    if color_col in df.columns:
+        ax.legend(title=color_col, fontsize=7, title_fontsize=8, loc="best", frameon=True)
+
+    plt.tight_layout()
+    return fig
+
+
+def lemaitre_plot(df, color_col="rock_group", size=(7, 4.5), point_size=30):
+    """
+    Aproximación práctica de clasificación química usando
+    alkalis vs SiO2.
+    """
+    if "SiO2n" not in df.columns or "alkalis" not in df.columns:
+        return None
+
+    fig, ax = plt.subplots(figsize=size)
+
+    sns.scatterplot(
+        data=df,
+        x="SiO2n",
+        y="alkalis",
+        hue=color_col if color_col in df.columns else None,
+        style=color_col if color_col in df.columns else None,
+        palette="Set2" if color_col in df.columns else None,
+        s=point_size,
+        alpha=0.75,
+        edgecolor="white",
+        linewidth=0.3,
+        ax=ax
+    )
+
+    sns.regplot(
+        data=df,
+        x="SiO2n",
+        y="alkalis",
+        scatter=False,
+        ci=None,
+        line_kws={"color": "black", "linewidth": 1},
+        ax=ax
+    )
+
+    ax.set_title("Le Maitre (aproximado)")
+    ax.set_xlabel("SiO2 (%)")
+    ax.set_ylabel("Na2O + K2O (%)")
+    ax.grid(True, linestyle="--", alpha=0.3)
+
+    if color_col in df.columns:
+        ax.legend(title=color_col, fontsize=7, title_fontsize=8, loc="best", frameon=True)
+
     plt.tight_layout()
     return fig
