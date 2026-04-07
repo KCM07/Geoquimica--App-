@@ -74,9 +74,11 @@ img_base64 = get_base64_image("assets/Logo_.png")
 
 st.markdown(
     f"""
-    <div style="display:flex; align-items:center; gap:18px; margin-bottom:10px;">
+    <div style="display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:10px;">
         <img src="data:image/png;base64,{img_base64}" width="750">
-        <h1 style="margin:0;">⛏️ ANÁLISIS GEOQUÍMICO DE ROCAS ÍGNEAS</h1>
+        <h1 style="margin:0; text-align:center;">
+            ⛏️ ANÁLISIS GEOQUÍMICO DE ROCAS ÍGNEAS
+        </h1>
     </div>
     """,
     unsafe_allow_html=True
