@@ -32,7 +32,7 @@ import pandas as pd
 
 
 # =========================
-# TAS CLASS (NUEVO 🔥)
+# TAS CLASS
 # =========================
 def classify_tas_simple(sio2, alkalis):
     if pd.isna(sio2) or pd.isna(alkalis):
@@ -162,7 +162,7 @@ def main():
     # 3 variables geoquímicas
     df = add_geochemical_variables(df)
 
-    # 🔥 NUEVO TAS
+    #  NUEVO TAS
     df = add_tas_class(df)
 
     # 4 reagrupación
@@ -196,7 +196,7 @@ def main():
 
     scatter_plot(df)
 
-    # 🔥 TAS CORREGIDO
+    #  TAS CORREGIDO
     tas_plot(df, color_col="tas_class")
 
     for elem in ["TiO2n", "MgOn", "FeO*n", "CaOn", "Al2O3n", "Na2On", "K2On", "P2O5n"]:
