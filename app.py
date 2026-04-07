@@ -71,7 +71,7 @@ def get_base64_image(path: str) -> str:
 
 
 img_base64 = get_base64_image("assets/Logo_.png")
-
+st.write("")  # fuerza render limpio
 st.markdown(
     f"""
     <div style="
@@ -82,8 +82,7 @@ st.markdown(
         margin-bottom:25px;
         padding:20px;
     ">
-
-        <img src="data:image/png;base64,{img_base64}" width="600">
+        <img src="data:image/png;base64,{img_base64}" width="600"/>
 
         <h1 style="
             margin:0;
@@ -97,14 +96,13 @@ st.markdown(
         <p style="
             margin:0;
             font-size:15px;
-            color:#666;
+            color:#888;
             text-align:center;
             letter-spacing:1.2px;
             font-style:italic;
         ">
             Kem Carbajal Moscoso
         </p>
-
     </div>
     """,
     unsafe_allow_html=True
