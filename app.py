@@ -83,7 +83,7 @@ st.markdown(
         padding:20px;
     ">
 
-        <img src="data:image/png;base64,{img_base64}" width="750">
+        <img src="data:image/png;base64,{img_base64}" width="600">
 
         <h1 style="
             margin:0;
