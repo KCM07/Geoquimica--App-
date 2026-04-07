@@ -394,7 +394,7 @@ if uploaded_file:
         n_outliers = int(pd.Series(df_outliers["outlier_flag"]).sum())
         st.write(f"**Filas con outliers (IQR) en una o más variables:** {n_outliers}")
 
-        st.subheader("Tabla QA/QC con resaltado")
+        st.subheader("Tabla QA/QC Incongruencias detectadas")
         st.dataframe(
             df_qc.style.apply(highlight_qc, axis=1),
             use_container_width=True,
