@@ -78,24 +78,28 @@ st.markdown(
         display:flex;
         flex-direction:column;
         align-items:center;
-        gap:6px;
-        margin-bottom:20px;
+        gap:10px;
+        margin-bottom:25px;
+        padding:15px;
     ">
         <img src="data:image/png;base64,{img_base64}" width="750">
 
         <h1 style="
             margin:0;
             text-align:center;
-            font-size:32px;
+            font-size:34px;
+            font-weight:700;
         ">
             ⛏️ ANÁLISIS GEOQUÍMICO DE ROCAS ÍGNEAS
         </h1>
 
         <p style="
             margin:0;
-            font-size:14px;
-            color:gray;
+            font-size:15px;
+            color:#666;
             text-align:center;
+            letter-spacing:1.2px;
+            font-style:italic;
         ">
             Kem Carbajal Moscoso
         </p>
