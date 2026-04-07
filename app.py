@@ -199,7 +199,6 @@ def summarize_missing_values(dataframe: pd.DataFrame) -> pd.DataFrame:
     })
     return summary.sort_values("nulos", ascending=False).reset_index(drop=True)
 
-
 def detect_outliers_iqr(dataframe: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
     df = dataframe.copy() # $
     outlier_count = pd.Series(0, index=df.index)
