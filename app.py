@@ -76,7 +76,7 @@ st.markdown(
     <div style="display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:10px;">
         <img src="data:image/png;base64,{img_base64}" width="750">
         <h1 style="margin:0; text-align:center;">
-            ⛏️ ANÁLISIS GEOQUÍMICO DE ROCAS ÍGNEAS
+            ⛏️ ANÁLISIS GEOQUÍMICO DE ROCAS ÍGNEAS By: Kem Carbajal Moscoso
         </h1>
     </div>
     """,
