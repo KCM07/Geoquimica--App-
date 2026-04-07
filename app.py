@@ -85,7 +85,7 @@ st.markdown(
 uploaded_file = st.file_uploader("Sube tu archivo CSV", type=["csv"])
 
 # ============================================================
-# FUNCIONES AUXILIARES
+# FUNCIONES AUXILIARES QaQc        $
 # ============================================================
 def build_qc_table(dataframe: pd.DataFrame) -> pd.DataFrame:
     qc_table = dataframe.copy()
@@ -201,7 +201,7 @@ def summarize_missing_values(dataframe: pd.DataFrame) -> pd.DataFrame:
 
 
 def detect_outliers_iqr(dataframe: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
-    df = dataframe.copy()
+    df = dataframe.copy() # $
     outlier_count = pd.Series(0, index=df.index)
 
     valid_cols = [c for c in columns if c in df.columns]
@@ -328,7 +328,7 @@ def get_row_filtered_df(dataframe: pd.DataFrame, mode_key: str, title: str) -> p
 # FLUJO PRINCIPAL
 # ============================================================
 if uploaded_file:
-    raw_df = load_data(uploaded_file)
+    raw_df = load_data(uploaded_file)     # FUNCION PRINCIPAL****************************************************
 
     if raw_df is not None:
         # =========================
@@ -359,7 +359,7 @@ if uploaded_file:
             })
             st.dataframe(schema_df, use_container_width=True)
 
-        df_base = clean_data(df_raw)
+        df_base = clean_data(df_raw) ### FUNCION PRINCIPAL ******************************************
 
         # =========================
         # 2. ANÁLISIS DE INCONSISTENCIAS
@@ -377,7 +377,8 @@ if uploaded_file:
         st.subheader("Valores nulos por columna")
         st.dataframe(summarize_missing_values(df_base), use_container_width=True, height=350)
 
-        df_qc = build_qc_table(df_base)
+        df_qc = build_qc_table(df_base) ### FUNCION PRINCIPAL ****************************************(*)
+
         df_outliers = detect_outliers_iqr(df_qc, get_numeric_columns(df_qc))
 
         st.subheader("Resumen QA/QC")
@@ -438,7 +439,7 @@ if uploaded_file:
             index=0
         )
 
-        df_corrected = df_qc.copy()
+        df_corrected = df_qc.copy() ## FUNCION PRINCIPAL ********************************************
 
         if qc_method == "Eliminar filas con flags QA/QC":
             df_corrected = df_corrected[df_corrected["QC_flag"].astype(str).str.strip() == ""].copy()
@@ -468,7 +469,7 @@ if uploaded_file:
         # =========================
         st.header("4. 🪨 Reagrupación / normalización litológica")
 
-        df_group = process_rock_names(df_corrected)
+        df_group = process_rock_names(df_corrected) # FUNCION PRINCIPAL ***************************************
 
         cols_litologia = [
             "rock_name",
@@ -511,9 +512,9 @@ if uploaded_file:
         # =========================
         st.header("5. 📊 Resumen estadístico y cálculos de parámetros")
 
-        df_calc = add_geochemical_variables(df_group)
+        df_calc = add_geochemical_variables(df_group) # FUNCION PRINCIPAL *************************************************
         df_calc = ensure_geochemical_columns(df_calc)
-        df_calc = add_tas_class(df_calc)
+        df_calc = add_tas_class(df_calc)              # FUNCION PRINCIPAL *****************************
 
         st.subheader("Estructura de variables")
         oxidos = [
